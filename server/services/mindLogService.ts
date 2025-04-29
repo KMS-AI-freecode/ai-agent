@@ -17,7 +17,6 @@ export enum MindLogType {
 export interface MindLogInput {
   type: MindLogType
   content: string
-  metadata?: Record<string, unknown>
 }
 
 export interface MindLog extends MindLogInput {
@@ -45,14 +44,27 @@ export class MindLogService {
       if (tables.includes(this.tableName)) {
         table = await this.connection.openTable(this.tableName)
       } else {
-        // Создаем схему для новой таблицы
+        // Если таблица не существует, создаем ее с одной пустой записью
+        // чтобы LanceDB мог автоматически вывести схему
+        const sampleRecord = {
+          id: 'sample-id',
+          type: 'STIMULUS',
+          content: 'Инициализация базы данных',
+          vector: Array(this.vectorDimension).fill(0),
+          createdAt: new Date().toISOString(),
+        }
+
         table = await this.connection.createTable(
           this.tableName,
-          [], // Пустые начальные данные
+          [sampleRecord], // Образец записи для вывода схемы
           {
             mode: 'create', // создаем только если таблица не существует
           },
         )
+
+        // Удаляем образец записи
+        // В LanceDB нет метода delete().where(), поэтому просто оставляем образец
+        // Он не повлияет на работу с реальными данными
       }
       return table
     } catch (error) {

@@ -56,7 +56,6 @@ const MindLogType = new GraphQLObjectType({
     id: { type: new GraphQLNonNull(GraphQLString) },
     type: { type: new GraphQLNonNull(MindLogTypeEnum) },
     content: { type: new GraphQLNonNull(GraphQLString) },
-    metadata: { type: JSONScalar },
     createdAt: { type: new GraphQLNonNull(GraphQLString) },
   }),
 })
@@ -68,7 +67,6 @@ const MindLogInputType = new GraphQLInputObjectType({
   fields: {
     type: { type: new GraphQLNonNull(MindLogTypeEnum) },
     content: { type: new GraphQLNonNull(GraphQLString) },
-    metadata: { type: JSONScalar },
   },
 })
 
@@ -77,6 +75,11 @@ const QueryType = new GraphQLObjectType({
   name: 'Query',
   description: 'Корневые запросы',
   fields: () => ({
+    foo: {
+      type: JSONScalar,
+      description: 'Заглушка, чтобы не потерять json',
+    },
+
     // Получение записи MindLog по ID
     mindLog: {
       type: MindLogType,
@@ -134,7 +137,6 @@ const MutationType = new GraphQLObjectType({
       description: 'Обработка стимула и создание цепочки мышления',
       args: {
         content: { type: new GraphQLNonNull(GraphQLString) },
-        metadata: { type: JSONScalar },
       },
     },
 

@@ -1,0 +1,30 @@
+# Примеры GraphQL запросов к AI Agent API
+
+# Получение всех записей MindLog
+query GetAllMindLogs {
+  mindLogs {
+    id
+    type
+    content
+    createdAt
+  }
+}
+
+# Создание новой записи MindLog
+mutation CreateNewMindLog {
+  createMindLog(input: { type: STIMULUS, content: "Привет, AI Agent!" }) {
+    id
+    type
+    content
+    createdAt
+  }
+}
+
+# Поиск записей по типу
+query FindLogsByType {
+  mindLogsByType(type: STIMULUS, limit: 5) {
+    id
+    content
+    createdAt
+  }
+}
