@@ -1,7 +1,7 @@
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { Server } from 'http'
-import { ApolloContext } from '../types/context'
+import { ApolloContext } from '../graphql/context'
 import { schema } from '../graphql/schema'
 
 /**

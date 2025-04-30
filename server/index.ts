@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import './config'
+
 import express from 'express'
 import { createServer } from 'http'
 import next from 'next'
@@ -12,8 +14,10 @@ import { renderGraphiQL } from 'graphql-helix'
 import fs from 'fs'
 
 // Импорт сервисов и модулей
-import { MindLogService } from './services/mindLogService'
 import { createApolloServer } from './apolloServer'
+import { initDatabase } from './db/migrations'
+import { ApolloContext } from './graphql/context'
+import { openaiClient } from './openaiClient'
 
 // Загрузка переменных окружения
 dotenv.config()
@@ -52,10 +56,10 @@ async function startServer() {
 
   console.log(`Connecting to LanceDB at ${dbPath}`)
 
-  const lancedbConnection = await lancedb.connect(dbPath)
+  const lanceDbConnection = await lancedb.connect(dbPath)
 
-  // Инициализация сервисов
-  const mindLogService = new MindLogService(lancedbConnection)
+  // Инициализация базы данных и выполнение миграций
+  await initDatabase(lanceDbConnection)
 
   // Инициализация Apollo Server
   const apolloServer = createApolloServer(httpServer, enableIntrospection)
@@ -69,7 +73,6 @@ async function startServer() {
       res.send(
         renderGraphiQL({
           endpoint: '/api',
-          title: 'AI Agent GraphQL API',
           defaultQuery,
         }),
       )
@@ -82,13 +85,16 @@ async function startServer() {
     cors<cors.CorsRequest>(),
     json(),
     expressMiddleware(apolloServer, {
-      context: async ({ req }) => ({
-        req,
-        lanceDb: lancedbConnection,
-        services: {
-          mindLogService,
-        },
-      }),
+      context: async ({ req }) => {
+        const context: ApolloContext = {
+          req,
+          lanceDb: lanceDbConnection,
+          services: {},
+          openai: openaiClient,
+        }
+
+        return context
+      },
     }),
   )
 

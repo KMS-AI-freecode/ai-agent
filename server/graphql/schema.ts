@@ -1,76 +1,129 @@
 import {
+  GraphQLSchema,
   GraphQLObjectType,
+  GraphQLEnumType,
   GraphQLString,
   GraphQLList,
   GraphQLNonNull,
-  GraphQLSchema,
-  GraphQLEnumType,
-  GraphQLScalarType,
   GraphQLInt,
+  GraphQLBoolean,
   GraphQLInputObjectType,
-  Kind,
 } from 'graphql'
-import { makeExecutableSchema } from '@graphql-tools/schema'
+import { JSONScalar } from './scalars/json'
 import { resolvers } from './resolvers'
+import { MindLogType as MindLogTypeEnum } from './types/MindLog/interfaces'
 
-// JSON скаляр
-const JSONScalar = new GraphQLScalarType({
-  name: 'JSON',
-  description: 'JSON custom scalar type',
-  serialize(value) {
-    return value
-  },
-  parseValue(value) {
-    return value
-  },
-  parseLiteral(ast) {
-    if (ast.kind === Kind.STRING) {
-      try {
-        return JSON.parse(ast.value)
-      } catch (error) {
-        return null
-      }
-    }
-    return null
-  },
-})
-
-// Enum для типов MindLog
-const MindLogTypeEnum = new GraphQLEnumType({
+// Определение перечисления MindLogType
+const MindLogTypeEnumType = new GraphQLEnumType({
   name: 'MindLogType',
-  description: 'Типы записей в MindLog',
+  description: 'Типы записей MindLog',
   values: {
-    STIMULUS: { value: 'STIMULUS' },
-    REACTION: { value: 'REACTION' },
-    REASONING: { value: 'REASONING' },
-    ACTION: { value: 'ACTION' },
-    RESULT: { value: 'RESULT' },
+    Stimulus: {
+      value: MindLogTypeEnum.Stimulus,
+      description: 'Входящий раздражитель, запрос или сигнал',
+    },
+    Reaction: {
+      value: MindLogTypeEnum.Reaction,
+      description: 'Первичная реакция на раздражитель',
+    },
+    Reasoning: {
+      value: MindLogTypeEnum.Reasoning,
+      description: 'Логика рассуждения и анализ информации',
+    },
+    Intention: {
+      value: MindLogTypeEnum.Intention,
+      description: 'Намерение совершить действие',
+    },
+    Action: {
+      value: MindLogTypeEnum.Action,
+      description: 'Конкретное действие для решения задачи',
+    },
+    Progress: {
+      value: MindLogTypeEnum.Progress,
+      description: 'Промежуточные мысли и прогресс в выполнении',
+    },
+    Conclusion: {
+      value: MindLogTypeEnum.Conclusion,
+      description: 'Заключение на основе анализа',
+    },
+    Result: {
+      value: MindLogTypeEnum.Result,
+      description: 'Окончательный результат',
+    },
+    Confirmation: {
+      value: MindLogTypeEnum.Confirmation,
+      description: 'Подтверждение гипотезы или информации',
+    },
+    Refutation: {
+      value: MindLogTypeEnum.Refutation,
+      description: 'Опровержение неверной информации',
+    },
+    Correction: {
+      value: MindLogTypeEnum.Correction,
+      description: 'Исправление ошибки или неточности',
+    },
+    Evaluation: {
+      value: MindLogTypeEnum.Evaluation,
+      description: 'Оценка качества или полезности информации',
+    },
+    Suggestion: {
+      value: MindLogTypeEnum.Suggestion,
+      description: 'Предложение альтернативного подхода',
+    },
+    OptimizedMemory: {
+      value: MindLogTypeEnum.OptimizedMemory,
+      description: 'Оптимизированное знание или информация',
+    },
+    ForgottenMemory: {
+      value: MindLogTypeEnum.ForgottenMemory,
+      description: 'Информация, которая больше не актуальна',
+    },
+    ChunkedKnowledge: {
+      value: MindLogTypeEnum.ChunkedKnowledge,
+      description: 'Сгруппированная информация из разных источников',
+    },
+    ReinforcedAction: {
+      value: MindLogTypeEnum.ReinforcedAction,
+      description: 'Усиленное действие после положительного отклика',
+    },
+    Mentoring: {
+      value: MindLogTypeEnum.Mentoring,
+      description: 'Передача знаний от опытного агента',
+    },
+    Guidance: {
+      value: MindLogTypeEnum.Guidance,
+      description: 'Направление по решению будущих задач',
+    },
+    ProcessSummary: {
+      value: MindLogTypeEnum.ProcessSummary,
+      description: 'Краткое резюме всего процесса с выделением ключевых точек',
+    },
   },
 })
 
-// Тип MindLog
+// Определение типа MindLog
 const MindLogType = new GraphQLObjectType({
   name: 'MindLog',
-  description: 'Запись в базе данных мыслей',
+  description: 'Запись в логе мышления',
   fields: () => ({
     id: { type: new GraphQLNonNull(GraphQLString) },
-    type: { type: new GraphQLNonNull(MindLogTypeEnum) },
+    type: { type: new GraphQLNonNull(MindLogTypeEnumType) },
     content: { type: new GraphQLNonNull(GraphQLString) },
     createdAt: { type: new GraphQLNonNull(GraphQLString) },
   }),
 })
 
-// Входные данные для MindLog
-const MindLogInputType = new GraphQLInputObjectType({
-  name: 'MindLogInput',
+// Входные данные для создания MindLog
+const CreateMindLogInputType = new GraphQLInputObjectType({
+  name: 'CreateMindLogInput',
   description: 'Входные данные для создания записи MindLog',
   fields: {
-    type: { type: new GraphQLNonNull(MindLogTypeEnum) },
+    type: { type: new GraphQLNonNull(MindLogTypeEnumType) },
     content: { type: new GraphQLNonNull(GraphQLString) },
   },
 })
 
-// Корневой тип Query
+// Определение Query
 const QueryType = new GraphQLObjectType({
   name: 'Query',
   description: 'Корневые запросы',
@@ -87,79 +140,101 @@ const QueryType = new GraphQLObjectType({
       args: {
         id: { type: new GraphQLNonNull(GraphQLString) },
       },
+      resolve: resolvers.Query.mindLog,
     },
 
     // Получение всех записей MindLog
     mindLogs: {
-      type: new GraphQLNonNull(new GraphQLList(MindLogType)),
+      type: new GraphQLNonNull(
+        new GraphQLList(new GraphQLNonNull(MindLogType)),
+      ),
       description: 'Получение всех записей MindLog',
+      resolve: resolvers.Query.mindLogs,
     },
 
-    // Поиск записей по типу
+    // Поиск записей MindLog по типу
     mindLogsByType: {
-      type: new GraphQLNonNull(new GraphQLList(MindLogType)),
-      description: 'Поиск записей по типу',
+      type: new GraphQLNonNull(
+        new GraphQLList(new GraphQLNonNull(MindLogType)),
+      ),
+      description: 'Получение записей MindLog по типу',
       args: {
-        type: { type: new GraphQLNonNull(MindLogTypeEnum) },
+        type: { type: new GraphQLNonNull(MindLogTypeEnumType) },
         limit: { type: GraphQLInt },
       },
+      resolve: resolvers.Query.mindLogsByType,
     },
 
-    // Семантический поиск по вектору
+    // Векторный поиск похожих записей
     searchSimilarLogs: {
-      type: new GraphQLNonNull(new GraphQLList(MindLogType)),
-      description: 'Семантический поиск похожих записей по вектору',
+      type: new GraphQLNonNull(
+        new GraphQLList(new GraphQLNonNull(MindLogType)),
+      ),
+      description: 'Векторный поиск похожих записей',
       args: {
-        vector: { type: new GraphQLNonNull(new GraphQLList(GraphQLInt)) },
+        vector: {
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(GraphQLInt)),
+          ),
+        },
         limit: { type: GraphQLInt },
       },
+      resolve: resolvers.Query.searchSimilarLogs,
     },
   }),
 })
 
-// Корневой тип Mutation
+// Определение Mutation
 const MutationType = new GraphQLObjectType({
   name: 'Mutation',
   description: 'Корневые мутации',
   fields: () => ({
     // Создание новой записи MindLog
     createMindLog: {
-      type: new GraphQLNonNull(MindLogType),
+      type: MindLogType,
       description: 'Создание новой записи MindLog',
       args: {
-        input: { type: new GraphQLNonNull(MindLogInputType) },
+        input: { type: new GraphQLNonNull(CreateMindLogInputType) },
       },
+      resolve: resolvers.Mutation.createMindLog,
     },
 
-    // Обработка стимула и создание цепочки мышления
-    processStimulus: {
-      type: new GraphQLNonNull(MindLogType),
+    // Обновление векторного представления
+    updateVector: {
+      type: MindLogType,
+      description: 'Обновление векторного представления записи MindLog',
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        vector: {
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(GraphQLInt)),
+          ),
+        },
+      },
+      resolve: resolvers.Mutation.updateVector,
+    },
+
+    // Обработка стимула
+    sendMessage: {
+      type: new GraphQLNonNull(GraphQLString),
       description: 'Обработка стимула и создание цепочки мышления',
       args: {
         content: { type: new GraphQLNonNull(GraphQLString) },
       },
+      resolve: resolvers.Mutation.processStimulus,
     },
 
-    // Обновление векторного представления записи
-    updateVector: {
-      type: MindLogType,
-      description: 'Обновление векторного представления записи',
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-        vector: { type: new GraphQLNonNull(new GraphQLList(GraphQLInt)) },
-      },
+    // Удаление всех записей MindLog
+    deleteMindLogs: {
+      type: new GraphQLNonNull(GraphQLBoolean),
+      description: 'Удаление всех записей MindLog',
+      resolve: resolvers.Mutation.deleteMindLogs,
     },
   }),
 })
 
-// Создаем схему
-const typeDefs = new GraphQLSchema({
+// Итоговая схема GraphQL
+export const schema = new GraphQLSchema({
   query: QueryType,
   mutation: MutationType,
-})
-
-// Создаем исполняемую схему с резолверами
-export const schema = makeExecutableSchema({
-  typeDefs,
-  resolvers,
 })

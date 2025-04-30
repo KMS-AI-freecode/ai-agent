@@ -11,7 +11,8 @@
     "lint": "eslint . --ext ts --ext tsx --ext js",
     "format": "prettier --write .",
     "build": "next build && yarn build:server",
-    "build:server": "tsc --project tsconfig.server.json",
+    "build:server": "tsc --project tsconfig.server.json && npm run copy-statics",
+    "copy-statics": "copyfiles -u 1 \"server/**/*.graphql\" dist/",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "prepare": "husky",
     "lint-staged": "lint-staged"
@@ -32,7 +33,7 @@
     "graphql-helix": "^1.13.0",
     "graphql-tag": "^2.12.6",
     "next": "^15.3.1",
-    "openai": "^4.28.0",
+    "openai": "^4.96.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -44,6 +45,7 @@
     "@types/react-dom": "^18.2.18",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "copyfiles": "^2.4.1",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.0",
     "eslint-config-prettier": "^9.1.0",

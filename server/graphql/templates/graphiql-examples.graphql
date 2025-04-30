@@ -11,18 +11,17 @@ query GetAllMindLogs {
 }
 
 # Создание новой записи MindLog
-mutation CreateNewMindLog {
-  createMindLog(input: { type: STIMULUS, content: "Привет, AI Agent!" }) {
-    id
-    type
-    content
-    createdAt
-  }
+mutation sendMessage {
+  sendMessage(content:"Сколько будет 5+5*5?") 
+}
+
+mutation deleteMindLogs {
+  deleteMindLogs
 }
 
 # Поиск записей по типу
 query FindLogsByType {
-  mindLogsByType(type: STIMULUS, limit: 5) {
+  mindLogsByType(type: Stimulus, limit: 5) {
     id
     content
     createdAt
