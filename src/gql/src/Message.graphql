@@ -1,0 +1,4 @@
+# Создание новой записи MindLog
+mutation sendMessage($text: String!) {
+  sendMessage(content: $text)
+}
