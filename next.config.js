@@ -6,4 +6,9 @@ module.exports = {
     config.externals.push({ '@lancedb/lancedb': '@lancedb/lancedb' })
     return config
   },
+  compiler: {
+    styledComponents: {
+      displayName: process.env.NODE_ENV === 'development',
+    },
+  },
 }

@@ -13,8 +13,8 @@
     "format": "prettier --write .",
     "build": "next build && yarn build:server",
     "build:server": "tsc --project tsconfig.server.json && npm run copy-statics",
-    "copy-statics": "copyfiles -u 1 \"server/**/*.graphql\" dist/",
-    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "copy-statics": "copyfiles -u 1 \"server/**/*.graphql\" dist/server/",
+    "start": "cross-env NODE_ENV=production node dist/server/index.js",
     "prepare": "husky",
     "lint-staged": "lint-staged"
   },
@@ -36,7 +36,9 @@
     "next": "^15.3.1",
     "openai": "^4.96.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "styled-components": "^6.1.17"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^5.0.5",

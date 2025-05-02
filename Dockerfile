@@ -7,6 +7,7 @@ RUN ls -la
 RUN npm ci
 COPY . .
 
+RUN npm run generate:types
 RUN npm run build
 
 EXPOSE 3000
