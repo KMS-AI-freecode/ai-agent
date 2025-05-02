@@ -1,0 +1,7 @@
+version: '3.8'
+services:
+  app:
+    volumes:
+      - ./src:/app/src
+      - ./server:/app/server
+    command: 'npm run dev'

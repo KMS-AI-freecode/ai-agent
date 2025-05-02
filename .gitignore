@@ -38,3 +38,5 @@ logs
 
 # LanceDB data
 /data
+
+/shared
