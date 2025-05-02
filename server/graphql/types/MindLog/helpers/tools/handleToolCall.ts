@@ -6,6 +6,7 @@ import { exec } from 'child_process'
 import * as os from 'os'
 import { MindLogType } from '../../interfaces'
 import { ApolloContext } from '../../../../context'
+import { toolName } from './interfaces'
 
 /**
  * Обработчик вызовов инструментов
@@ -34,7 +35,7 @@ export async function handleToolCall(
   )
 
   switch (name) {
-    case 'createMindLogEntry': {
+    case toolName.createMindLogEntry: {
       const { type, data, quality } = args
       const entry = await createMindLogEntry(
         context,
@@ -46,79 +47,79 @@ export async function handleToolCall(
       return { result: { success: true, entryId: entry.id } }
     }
 
-    case 'getAvailableModels': {
-      try {
-        const modelsResponse = await context.openai.models.list()
-        const models = modelsResponse.data.map((model) => model.id)
-        return { result: { models } }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error)
-        // Логируем ошибку
-        await createMindLogEntry(
-          context,
-          agentId,
-          MindLogType.Progress,
-          `Ошибка при получении списка моделей: ${errorMessage}`,
-          0.1,
-        )
-        return { result: { error: errorMessage } }
-      }
-    }
+    // case 'getAvailableModels': {
+    //   try {
+    //     const modelsResponse = await context.openai.models.list()
+    //     const models = modelsResponse.data.map((model) => model.id)
+    //     return { result: { models } }
+    //   } catch (error) {
+    //     const errorMessage =
+    //       error instanceof Error ? error.message : String(error)
+    //     // Логируем ошибку
+    //     await createMindLogEntry(
+    //       context,
+    //       agentId,
+    //       MindLogType.Progress,
+    //       `Ошибка при получении списка моделей: ${errorMessage}`,
+    //       0.1,
+    //     )
+    //     return { result: { error: errorMessage } }
+    //   }
+    // }
 
-    case 'askModel': {
-      const { model, question } = args
-      try {
-        // Логируем запрос
-        await createMindLogEntry(
-          context,
-          agentId,
-          MindLogType.Progress,
-          `Отправляю запрос модели ${model}: "${question}"`,
-          0.5,
-        )
+    // case 'askModel': {
+    //   const { model, question } = args
+    //   try {
+    //     // Логируем запрос
+    //     await createMindLogEntry(
+    //       context,
+    //       agentId,
+    //       MindLogType.Progress,
+    //       `Отправляю запрос модели ${model}: "${question}"`,
+    //       0.5,
+    //     )
 
-        // Отправляем запрос модели
-        const completion = await context.openai.chat.completions.create({
-          model,
-          messages: [
-            {
-              role: 'user',
-              content: question,
-            },
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
-        })
+    //     // Отправляем запрос модели
+    //     const completion = await context.openai.chat.completions.create({
+    //       model,
+    //       messages: [
+    //         {
+    //           role: 'user',
+    //           content: question,
+    //         },
+    //       ],
+    //       temperature: 0.7,
+    //       max_tokens: 1000,
+    //     })
 
-        const response = completion.choices[0]?.message?.content || ''
+    //     const response = completion.choices[0]?.message?.content || ''
 
-        // Логируем успешный ответ
-        await createMindLogEntry(
-          context,
-          agentId,
-          MindLogType.Progress,
-          `Получен ответ от модели ${model}: "${response}"`,
-          0.8,
-        )
+    //     // Логируем успешный ответ
+    //     await createMindLogEntry(
+    //       context,
+    //       agentId,
+    //       MindLogType.Progress,
+    //       `Получен ответ от модели ${model}: "${response}"`,
+    //       0.8,
+    //     )
 
-        return { result: { response } }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error)
-        // Логируем ошибку
-        await createMindLogEntry(
-          context,
-          agentId,
-          MindLogType.Progress,
-          `Ошибка при запросе к модели ${model}: ${errorMessage}`,
-          0.2,
-        )
-        return { result: { error: errorMessage } }
-      }
-    }
+    //     return { result: { response } }
+    //   } catch (error) {
+    //     const errorMessage =
+    //       error instanceof Error ? error.message : String(error)
+    //     // Логируем ошибку
+    //     await createMindLogEntry(
+    //       context,
+    //       agentId,
+    //       MindLogType.Progress,
+    //       `Ошибка при запросе к модели ${model}: ${errorMessage}`,
+    //       0.2,
+    //     )
+    //     return { result: { error: errorMessage } }
+    //   }
+    // }
 
-    case 'finishProcessing': {
+    case toolName.finishProcessing: {
       const { result, quality = 0.9 } = args
       // Создаем итоговую запись
       await createMindLogEntry(
@@ -135,7 +136,7 @@ export async function handleToolCall(
       }
     }
 
-    case 'getSystemConfig': {
+    case toolName.getSystemConfig: {
       // Получаем системную информацию
       const config = {
         workingDirectory: process.cwd(),
@@ -168,7 +169,7 @@ export async function handleToolCall(
       return { result: config }
     }
 
-    case 'execCommand': {
+    case toolName.execCommand: {
       const { command } = args
 
       await createMindLogEntry(

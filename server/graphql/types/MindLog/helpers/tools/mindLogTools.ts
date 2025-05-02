@@ -1,5 +1,6 @@
 import { ChatCompletionTool } from 'openai/resources/chat'
 import { MindLogType } from '../../interfaces'
+import { toolName } from './interfaces'
 
 /**
  * Определение инструментов для OpenAI
@@ -8,7 +9,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'createMindLogEntry',
+      name: toolName.createMindLogEntry,
       description:
         'Создает запись в лог мышления (MindLog) с определенным типом и содержанием',
       parameters: {
@@ -35,7 +36,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'finishProcessing',
+      name: toolName.finishProcessing,
       description: 'Завершает обработку раздражителя с итоговым результатом',
       parameters: {
         type: 'object',
@@ -56,7 +57,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'getSystemConfig',
+      name: toolName.getSystemConfig,
       description: 'Возвращает конфигурацию системы и рабочего окружения',
       parameters: {
         type: 'object',
@@ -67,7 +68,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: 'execCommand',
+      name: toolName.execCommand,
       description: 'Выполняет команду в системе и возвращает вывод',
       parameters: {
         type: 'object',
