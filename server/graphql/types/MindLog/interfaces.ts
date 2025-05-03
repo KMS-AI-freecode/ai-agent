@@ -23,6 +23,7 @@ export enum MindLogType {
   Mentoring = 'Mentoring',
   Guidance = 'Guidance',
   ProcessSummary = 'ProcessSummary',
+  SecurityViolation = 'SecurityViolation',
 }
 
 /**

@@ -41,6 +41,7 @@ export const ChatMessageStyled = styled.div<ChatMessageStyledProps>`
   code {
     background-color: #333;
     color: white;
+    white-space: pre-line;
   }
 
   ${ChatMessageContentStyled} {
