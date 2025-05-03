@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 
 export const SendButtonStyled = styled.button``
 
@@ -59,11 +59,7 @@ export const ErrorMessageStyled = styled.div`
   }
 `
 
-interface ChatMessagesStyledProps {
-  isEmpty: boolean
-}
-
-export const ChatMessagesStyled = styled.div<ChatMessagesStyledProps>`
+export const ChatMessagesStyled = styled.div`
   overflow-y: auto;
   padding: 20px;
   background-color: #fff;
@@ -72,13 +68,6 @@ export const ChatMessagesStyled = styled.div<ChatMessagesStyledProps>`
   display: flex;
   flex-direction: column;
   gap: 10px;
-
-  ${(props) =>
-    props.isEmpty &&
-    css`
-      align-items: center;
-      text-align: center;
-    `}
 `
 
 export const MainPageChatMessagesStyled = styled.div`

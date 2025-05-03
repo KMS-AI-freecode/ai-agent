@@ -37,13 +37,22 @@ import { getMindLogTable } from '../resolvers/helpers/getMindLogTable'
 
 //   return entry
 // }
-export async function createMindLogEntry(
-  context: ApolloContext,
-  agentId: string,
-  type: MindLogType,
-  data: string,
-  quality?: number,
-) {
+
+type createMindLogEntryProps = {
+  context: ApolloContext
+  agentId?: string
+  type: MindLogType
+  data: string
+  quality?: number
+}
+
+export async function createMindLogEntry({
+  context,
+  data,
+  type,
+  agentId: _agentId,
+  quality,
+}: createMindLogEntryProps) {
   quality
 
   return await createMindLog(

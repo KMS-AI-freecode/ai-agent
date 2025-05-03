@@ -28,9 +28,9 @@ type MainPageChatMessagesProps = {
   //
 }
 
-export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = (
+export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
   ...other
-) => {
+}) => {
   const [messages, messagesSetter] = useState<ChatMessageFragment[]>([])
 
   const [error, errorSetter] = useState<Error | null>(null)
@@ -63,19 +63,23 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = (
   //   errorSetter(new Error('MAIN_AI_AGENT_USERNAME is empty'))
   // }
 
-  const addMessageToOutput = useCallback((text: string) => {
-    messagesSetter((messages) => [
-      ...messages,
-      {
-        contentText: text,
-        creator: 'user',
-      },
-    ])
-  }, [])
+  const addMessageToOutput = useCallback(
+    (text: string, creator: ChatMessageFragment['creator']) => {
+      messagesSetter((messages) => [
+        ...messages,
+        {
+          contentText: text,
+          creator,
+          createdAt: new Date(),
+        },
+      ])
+    },
+    [],
+  )
 
   const handleSendMessage = useCallback(() => {
     setInputValue((text) => {
-      addMessageToOutput(text)
+      addMessageToOutput(text, 'user')
 
       createChatMessage({
         variables: {
@@ -87,7 +91,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = (
             const message = r.data.sendMessage
 
             if (message) {
-              addMessageToOutput(message)
+              addMessageToOutput(message, 'agent')
               setInputValue('')
             }
           }
@@ -146,10 +150,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = (
 
   return (
     <MainPageChatMessagesStyled {...other}>
-      <ChatMessagesStyled
-        ref={messagesContainerSetter}
-        isEmpty={messages.length === 0}
-      >
+      <ChatMessagesStyled ref={messagesContainerSetter}>
         {messages.map((n, index) => (
           <MainPageChatMessage key={index} message={n} />
         ))}

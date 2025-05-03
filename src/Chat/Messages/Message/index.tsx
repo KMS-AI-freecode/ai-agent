@@ -1,5 +1,9 @@
 import ReactMarkdown from 'react-markdown'
-import { ChatMessageContentStyled, ChatMessageStyled } from './styles'
+import {
+  ChatMessageContentStyled,
+  ChatMessageStyled,
+  MessageDateStyled,
+} from './styles'
 import { ChatMessageFragment } from './interfaces'
 import Link from 'next/link'
 
@@ -11,8 +15,21 @@ export const MainPageChatMessage: React.FC<MainPageChatMessageProps> = ({
   message,
   ...other
 }) => {
+  const isUser = message.creator === 'user'
+
+  // Format the date
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date)
+  }
+
   return (
-    <ChatMessageStyled isUser={message.creator === 'user'} {...other}>
+    <ChatMessageStyled isUser={isUser} {...other}>
       <ChatMessageContentStyled>
         <ReactMarkdown
           components={{
@@ -25,6 +42,10 @@ export const MainPageChatMessage: React.FC<MainPageChatMessageProps> = ({
         >
           {message.contentText}
         </ReactMarkdown>
+
+        <MessageDateStyled isUser={isUser}>
+          {message.createdAt && formatDate(message.createdAt)}
+        </MessageDateStyled>
       </ChatMessageContentStyled>
     </ChatMessageStyled>
   )

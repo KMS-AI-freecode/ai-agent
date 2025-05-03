@@ -5,9 +5,10 @@ import { MindLog, MindLogType } from '../interfaces'
 import { createMindLogEntry } from './createMindLog'
 import { sendOpenAiRequest } from './processOpenAIRequest'
 import { toolName } from './tools/interfaces'
+import { ChatCompletionMessageParam } from 'openai/resources/chat'
 
 /**
- * Основной обработчик раздражителей с использованием OpenAI и инструментов
+ * Main processor for stimuli using OpenAI and tools
  */
 export const processStimulus: GraphQLFieldResolver<
   unknown,
@@ -22,78 +23,48 @@ export const processStimulus: GraphQLFieldResolver<
 ): Promise<string> => {
   const agentId = context.aiAgent?.id || ''
 
-  // if (!agentId) {
-  //   throw new Error('agentId is empty')
-  // }
-
-  console.log('processStimulus context', context)
-  console.log('processStimulus data', data)
-
   const message = data.content
 
-  await createMindLogEntry(
+  await createMindLogEntry({
     context,
     agentId,
-    MindLogType.Stimulus,
-    `### Новый раздражитель
+    type: MindLogType.Stimulus,
+    data: `### New stimulus
     
 \`\`\`
 ${message}
 \`\`\``,
-  )
-
-  // Шаг 2: Логируем реакцию - планируем отправку запроса в OpenAI
-  await createMindLogEntry(
-    context,
-    agentId,
-    MindLogType.Reaction,
-    `### Планирование обработки
-    
-Планирую обработать раздражитель:
-\`\`\`
-${message}
-\`\`\``,
-    0.7,
-  )
-
-  // Шаг 3: Логируем действие - отправка запроса в OpenAI
-  await createMindLogEntry(
-    context,
-    agentId,
-    MindLogType.Action,
-    `### Отправка запроса в OpenAI
-    
-Отправляю запрос в OpenAI для анализа раздражителя`,
-    0.8,
-  )
+  })
 
   let logMindSamples = ''
 
-  // Описания для каждого типа MindLog
+  // Descriptions for each MindLog type
   const mindLogDescriptions: Record<MindLogType, string> = {
-    Stimulus: 'Входящий раздражитель, запрос или сигнал',
-    Reaction: 'Первичная реакция на раздражитель',
-    Reasoning: 'Логика рассуждения и анализ информации',
-    Intention: 'Намерение совершить действие',
-    Action: 'Конкретное действие для решения задачи',
-    Progress: 'Промежуточные мысли и прогресс в выполнении',
-    Conclusion: 'Заключение на основе анализа',
-    Result: 'Окончательный результат',
-    Confirmation: 'Подтверждение гипотезы или информации',
-    Refutation: 'Опровержение неверной информации',
-    Correction: 'Исправление ошибки или неточности',
-    Evaluation: 'Оценка качества или полезности информации',
-    Suggestion: 'Предложение альтернативного подхода',
-    OptimizedMemory: 'Оптимизированное знание или информация',
-    ForgottenMemory: 'Информация, которая больше не актуальна',
-    ChunkedKnowledge: 'Сгруппированная информация из разных источников',
-    ReinforcedAction: 'Усиленное действие после положительного отклика',
-    Mentoring: 'Передача знаний от опытного агента',
-    Guidance: 'Направление по решению будущих задач',
-    ProcessSummary: 'Краткое резюме всего процесса с выделением ключевых точек',
+    Stimulus: 'Incoming stimulus, request or signal',
+    Reaction: 'Primary reaction to the stimulus',
+    Reasoning: 'Logic of reasoning and information analysis',
+    Intention: 'Intention to take action',
+    Action: 'Specific action to solve a task',
+    Progress: 'Intermediate thoughts and progress in execution',
+    Error: 'Description of an error that occurred',
+    Conclusion: 'Conclusion based on analysis',
+    Result: 'Final result',
+    Confirmation: 'Confirmation of a hypothesis or information',
+    Refutation: 'Refutation of incorrect information',
+    Correction: 'Correction of an error or inaccuracy',
+    Evaluation: 'Evaluation of quality or usefulness of information',
+    Suggestion: 'Suggestion of an alternative approach',
+    OptimizedMemory: 'Optimized knowledge or information',
+    ForgottenMemory: 'Information that is no longer relevant',
+    ChunkedKnowledge: 'Grouped information from different sources',
+    ReinforcedAction: 'Reinforced action after positive feedback',
+    Mentoring: 'Knowledge transfer from an experienced agent',
+    Guidance: 'Direction for solving future tasks',
+    ProcessSummary:
+      'Brief summary of the entire process highlighting key points',
   }
 
-  // Формируем список из всех доступных типов MindLog
+  // Form a list of all available MindLog types
   Object.values(MindLogType).forEach((type) => {
     switch (type) {
       case MindLogType.Stimulus:
@@ -103,16 +74,7 @@ ${message}
       case MindLogType.Progress:
       case MindLogType.Conclusion:
       case MindLogType.ProcessSummary:
-        // case MindLogType.Intention:
-        // case MindLogType.Refutation:
-        // case MindLogType.Correction:
-        // case MindLogType.Suggestion:
-        // case MindLogType.OptimizedMemory:
-        // case MindLogType.ForgottenMemory:
-        // case MindLogType.ChunkedKnowledge:
-        // case MindLogType.ReinforcedAction:
-        // case MindLogType.Mentoring:
-        // case MindLogType.Guidance:
+      case MindLogType.Result:
         logMindSamples += `  - ${type}: ${mindLogDescriptions[type]}\n`
         break
     }
@@ -122,83 +84,80 @@ ${message}
 
   const toolsDescriptions: Record<toolName, string> = {
     createMindLogEntry:
-      'Создает запись в логе мышления с указанным типом и текстом',
+      'Creates an entry in the thinking log with the specified MindLogType and text',
     execCommand:
-      'Выполняет программы на уровне операционной системе в окружении bash',
-    finishProcessing: 'Завершить обработку с окончательным результатом',
+      'Executes programs at the operating system level in the bash environment',
     getSystemConfig:
-      'Получает системную информацию из текущей операционной системы',
+      'Gets system information from the current operating system',
   }
 
   Object.values(toolName).forEach((n) => {
     toolsSamples += `  - ${n}: ${toolsDescriptions[n]}\n`
   })
 
-  // Системный промпт для моделей
-  const systemPrompt = `Ты самостоятельный ИИ-агент, который анализирует входящие сообщения и выполняет необходимые действия.
+  // System prompt for models
+  const systemPrompt = `# You are an independent AI agent that analyzes incoming messages and performs necessary actions.
 
-  Твоя задача:
-    1. Понять, что от тебя требуется в сообщении пользователя
-    2. Спланировать и выполнить действия, необходимые для ответа
-    3. Логировать каждый этап мышления через вызов тулзы ${toolName.createMindLogEntry} 
-    4. Завершить процесс с окончательным ответом через вызов тулзы ${toolName.finishProcessing}
+  ## Your task:
+    1. Understand what is required of you in the user's message
+    2. Plan and execute actions necessary to respond
+    3. Log each stage of thinking through the tool call ${toolName.createMindLogEntry} 
 
-  Доступные инструменты:
+  ## Available MindLogType record types for MindLog:
+
+  ${logMindSamples}
+
+  ## Available tools:
+
     ${toolsSamples}
 
-  Примеры типов записей:
-    ${logMindSamples}
 
-  Рекомендации по quality (оценка качества мысли от 0 до 1):
-    - 0.1-0.3 для ошибок и неудачных попыток
-    - 0.4-0.6 для промежуточных мыслей и вопросов
-    - 0.7-0.9 для успешных действий и хороших результатов
+  ## Recommendations for quality (thought quality assessment from 0 to 1):
+    - 0.1-0.3 for errors and unsuccessful attempts
+    - 0.4-0.6 for intermediate thoughts and questions
+    - 0.7-0.9 for successful actions and good results
 
-  Так же перед возвратом конечного результата можно сформировать полезный саммари всей цепочки выполнения и записать в mindLog ${MindLogType.ProcessSummary}
-
-  Ты выполняешься на уровне операционной системе и тебе разрешается выполнять любые необходимые для выполнения поставленной задачи доступные программы через вызов инструмента ${toolName.execCommand}
-
-  Ответы надо отдавать в формате markdown
+  ## General rules
   
-  ВАЖНО: Ты должен осознанно вызвать finishProcessing в конце, чтобы отдать конечный результат!
+  - Before returning the final result, you can create a useful summary of the entire execution chain and record it in mindLog ${MindLogType.ProcessSummary}
+
+  - You are executing at the operating system level and are allowed to execute any programs available for completing the assigned task through the tool call ${toolName.execCommand}. I will return the results of command execution to you so you can continue executing the assigned task, so you don't need to try to do everything at once, but can break it down into several stages.
+
+  - There should be only one answer, without additional options to choose from.
+
+  - If something is not clear, you can ask me.
+
+  - If you cannot complete the assigned task for some reason, say so.
+
+  - All messages are written in the user's language, or in the language they explicitly specified
+
+  ## Important! All messages are written in markdown format
 `
 
-  // Системный промпт для моделей
-  //   const systemPrompt = `Ты помощник искусственного интеллекта, который анализирует входящие сообщения и выполняет необходимые действия.
+  // Create or use existing messages
+  const messages: ChatCompletionMessageParam[] = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: message },
+  ]
 
-  //   Твоя задача:
-  //   1. Понять, что от тебя требуется в сообщении пользователя
-  //   2. Спланировать и выполнить действия, необходимые для ответа
-  //   3. Логировать каждый этап мышления через createMindLogEntry
-  //   4. Завершить процесс с окончательным ответом через finishProcessing
-
-  //   Доступные инструменты:
-  //   - createMindLogEntry: создает запись в логе мышления с указанным типом и текстом
-  //   - getAvailableModels: получить список доступных моделей
-  //   - askModel: задать вопрос определенной модели
-  //   - finishProcessing: завершить обработку с окончательным результатом
-
-  //   Примеры типов записей:
-  //   ${logMindSamples}
-
-  //   Рекомендации по quality (оценка качества мысли от 0 до 1):
-  //   - 0.1-0.3 для ошибок и неудачных попыток
-  //   - 0.4-0.6 для промежуточных мыслей и вопросов
-  //   - 0.7-0.9 для успешных действий и хороших результатов
-
-  //   ВАЖНО: Ты должен осознанно вызвать finishProcessing в конце, иначе обработка будет продолжаться бесконечно!
-
-  //   Так же перед возвратом конечного результата можно сформировать полезный саммари всей цепочки выполнения и записать в mindLog ProcessSummary
-  // `
-
-  // Вместо прямого запроса к OpenAI используем нашу абстракцию
-  const response = await sendOpenAiRequest(
+  // Instead of a direct request to OpenAI, we use our abstraction
+  const response = await sendOpenAiRequest({
     context,
     agentId,
-    message,
-    systemPrompt,
-  )
+    messages,
+    // systemPrompt,
+    recursionLevel: 0,
+  })
 
-  // Возвращаем сообщение
+  // Create final entry
+  await createMindLogEntry({
+    context,
+    agentId,
+    type: MindLogType.Result,
+    data: `Final result: ${response.message}`,
+    quality: 0.5,
+  })
+
+  // Return the message
   return response.message
 }

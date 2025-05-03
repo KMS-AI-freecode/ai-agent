@@ -1,6 +1,6 @@
 export enum toolName {
   createMindLogEntry = 'createMindLogEntry',
-  finishProcessing = 'finishProcessing',
+  // finishProcessing = 'finishProcessing',
   getSystemConfig = 'getSystemConfig',
   execCommand = 'execCommand',
 }

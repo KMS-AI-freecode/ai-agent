@@ -11,7 +11,7 @@ export const mindLogTools: ChatCompletionTool[] = [
     function: {
       name: toolName.createMindLogEntry,
       description:
-        'Создает запись в лог мышления (MindLog) с определенным типом и содержанием',
+        'Создает запись в лог мышления (MindLog) с определенным типом MindLogType и содержанием',
       parameters: {
         type: 'object',
         properties: {
@@ -33,27 +33,27 @@ export const mindLogTools: ChatCompletionTool[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: toolName.finishProcessing,
-      description: 'Завершает обработку раздражителя с итоговым результатом',
-      parameters: {
-        type: 'object',
-        properties: {
-          result: {
-            type: 'string',
-            description: 'Итоговый результат обработки. Формат markdown',
-          },
-          quality: {
-            type: 'number',
-            description: 'Оценка качества результата от 0 до 1',
-          },
-        },
-        required: ['result'],
-      },
-    },
-  },
+  // {
+  //   type: 'function',
+  //   function: {
+  //     name: toolName.finishProcessing,
+  //     description: 'Завершает обработку раздражителя с итоговым результатом',
+  //     parameters: {
+  //       type: 'object',
+  //       properties: {
+  //         result: {
+  //           type: 'string',
+  //           description: 'Итоговый результат обработки. Формат markdown',
+  //         },
+  //         quality: {
+  //           type: 'number',
+  //           description: 'Оценка качества результата от 0 до 1',
+  //         },
+  //       },
+  //       required: ['result'],
+  //     },
+  //   },
+  // },
   {
     type: 'function',
     function: {

@@ -8,6 +8,7 @@ export enum MindLogType {
   Intention = 'Intention',
   Action = 'Action',
   Progress = 'Progress',
+  Error = 'Error',
   Conclusion = 'Conclusion',
   Result = 'Result',
   Confirmation = 'Confirmation',

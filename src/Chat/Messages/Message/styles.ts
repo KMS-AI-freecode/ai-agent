@@ -5,6 +5,24 @@ export const ChatMessageContentStyled = styled.div`
   padding: 4px 6px;
 `
 
+interface MessageDateStyledProps {
+  isUser?: boolean
+}
+
+export const MessageDateStyled = styled.div<MessageDateStyledProps>`
+  font-size: 0.85rem;
+  color: ${(props) => (props.isUser ? '#ffffff' : '#444')};
+  margin-top: 8px;
+  text-align: right;
+  padding: 3px 5px;
+  font-weight: 500;
+  background-color: ${(props) =>
+    props.isUser ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.05)'};
+  border-radius: 4px;
+  display: inline-block;
+  margin-left: auto;
+`
+
 interface ChatMessageStyledProps {
   isUser: boolean
 }

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { ChatCompletionMessageParam } from 'openai/resources/chat'
+// import { ChatCompletionMessageParam } from 'openai/resources/chat'
 import { ToolCall } from '../interfaces'
 import { createMindLogEntry } from '../createMindLog'
 import { exec } from 'child_process'
@@ -11,130 +11,65 @@ import { toolName } from './interfaces'
 /**
  * Обработчик вызовов инструментов
  */
-export async function handleToolCall(
-  context: ApolloContext,
-  agentId: string,
-  toolCall: ToolCall,
-  _messages: ChatCompletionMessageParam[],
-): Promise<{
-  result: Record<string, unknown>
-  finished?: boolean
-  finalResult?: string
+
+type handleToolCallProps = {
+  context: ApolloContext
+  agentId: string
+  toolCall: ToolCall
+  // _messages: ChatCompletionMessageParam[],
+}
+
+export async function handleToolCall({
+  agentId,
+  context,
+  toolCall,
+}: handleToolCallProps): Promise<{
+  result: string
+  // finished?: boolean
 }> {
   const { name, arguments: argsString } = toolCall.function
   const args = JSON.parse(argsString)
 
   // Логируем вызов инструмента с аргументами
   console.log(`Tool Call: ${name}`, args)
-  await createMindLogEntry(
+  await createMindLogEntry({
     context,
     agentId,
-    MindLogType.Progress,
-    `Вызов инструмента: ${name}, аргументы: ${argsString}`,
-    0.5,
-  )
+    type: MindLogType.Progress,
+    data: `Вызов инструмента: ${name}, аргументы: ${argsString}`,
+    quality: 0.5,
+  })
 
   switch (name) {
     case toolName.createMindLogEntry: {
       const { type, data, quality } = args
-      const entry = await createMindLogEntry(
+      const entry = await createMindLogEntry({
         context,
         agentId,
-        type as MindLogType,
+        type: type as MindLogType,
         data,
         quality,
-      )
-      return { result: { success: true, entryId: entry.id } }
+      })
+      return { result: `Создана запись с id "${entry.id}"` }
     }
 
-    // case 'getAvailableModels': {
-    //   try {
-    //     const modelsResponse = await context.openai.models.list()
-    //     const models = modelsResponse.data.map((model) => model.id)
-    //     return { result: { models } }
-    //   } catch (error) {
-    //     const errorMessage =
-    //       error instanceof Error ? error.message : String(error)
-    //     // Логируем ошибку
-    //     await createMindLogEntry(
-    //       context,
-    //       agentId,
-    //       MindLogType.Progress,
-    //       `Ошибка при получении списка моделей: ${errorMessage}`,
-    //       0.1,
-    //     )
-    //     return { result: { error: errorMessage } }
+    // case toolName.finishProcessing: {
+    //   const { result, quality = 0.9 }: { result: string; quality: number } =
+    //     args
+    //   // Создаем итоговую запись
+    //   await createMindLogEntry(
+    //     context,
+    //     agentId,
+    //     MindLogType.Result,
+    //     result,
+    //     quality,
+    //   )
+
+    //   return {
+    //     result,
+    //     finished: true,
     //   }
     // }
-
-    // case 'askModel': {
-    //   const { model, question } = args
-    //   try {
-    //     // Логируем запрос
-    //     await createMindLogEntry(
-    //       context,
-    //       agentId,
-    //       MindLogType.Progress,
-    //       `Отправляю запрос модели ${model}: "${question}"`,
-    //       0.5,
-    //     )
-
-    //     // Отправляем запрос модели
-    //     const completion = await context.openai.chat.completions.create({
-    //       model,
-    //       messages: [
-    //         {
-    //           role: 'user',
-    //           content: question,
-    //         },
-    //       ],
-    //       temperature: 0.7,
-    //       max_tokens: 1000,
-    //     })
-
-    //     const response = completion.choices[0]?.message?.content || ''
-
-    //     // Логируем успешный ответ
-    //     await createMindLogEntry(
-    //       context,
-    //       agentId,
-    //       MindLogType.Progress,
-    //       `Получен ответ от модели ${model}: "${response}"`,
-    //       0.8,
-    //     )
-
-    //     return { result: { response } }
-    //   } catch (error) {
-    //     const errorMessage =
-    //       error instanceof Error ? error.message : String(error)
-    //     // Логируем ошибку
-    //     await createMindLogEntry(
-    //       context,
-    //       agentId,
-    //       MindLogType.Progress,
-    //       `Ошибка при запросе к модели ${model}: ${errorMessage}`,
-    //       0.2,
-    //     )
-    //     return { result: { error: errorMessage } }
-    //   }
-    // }
-
-    case toolName.finishProcessing: {
-      const { result, quality = 0.9 } = args
-      // Создаем итоговую запись
-      await createMindLogEntry(
-        context,
-        agentId,
-        MindLogType.Result,
-        result,
-        quality,
-      )
-      return {
-        result: { finished: true, result },
-        finished: true,
-        finalResult: result,
-      }
-    }
 
     case toolName.getSystemConfig: {
       // Получаем системную информацию
@@ -154,31 +89,33 @@ export async function handleToolCall(
         },
       }
 
-      await createMindLogEntry(
-        context,
-        agentId,
-        MindLogType.Progress,
-        `### Получена системная конфигурация\n\n\`\`\`json\n${JSON.stringify(
-          config,
-          null,
-          2,
-        )}\n\`\`\``,
-        0.7,
-      )
+      const result = `### Получена системная конфигурация\n\n\`\`\`json\n${JSON.stringify(
+        config,
+        null,
+        2,
+      )}\n\`\`\``
 
-      return { result: config }
+      // await createMindLogEntry({
+      //   context,
+      //   agentId,
+      //   type: MindLogType.Progress,
+      //   data: result,
+      //   quality: 0.7,
+      // })
+
+      return { result }
     }
 
     case toolName.execCommand: {
       const { command } = args
 
-      await createMindLogEntry(
-        context,
-        agentId,
-        MindLogType.Action,
-        `### Выполнение команды\n\n\`\`\`bash\n${command}\n\`\`\``,
-        0.7,
-      )
+      // await createMindLogEntry({
+      //   context,
+      //   agentId,
+      //   type: MindLogType.Action,
+      //   data: `### Выполнение команды\n\n\`\`\`bash\n${command}\n\`\`\``,
+      //   quality: 0.7,
+      // })
 
       try {
         // Простой интерфейс - только строка на вход и строка на выход
@@ -192,31 +129,37 @@ export async function handleToolCall(
           })
         })
 
-        await createMindLogEntry(
-          context,
-          agentId,
-          MindLogType.Progress,
-          `### Результат выполнения команды\n\n\`\`\`\n${output}\n\`\`\``,
-          0.8,
-        )
+        // await createMindLogEntry({
+        //   context,
+        //   agentId,
+        //   type: MindLogType.Progress,
+        //   data: `### Результат выполнения команды\n\n\`\`\`\n${output}\n\`\`\``,
+        //   quality: 0.8,
+        // })
 
-        return { result: { output } }
+        return { result: output }
       } catch (error) {
         const errorOutput = String(error)
 
-        await createMindLogEntry(
+        await createMindLogEntry({
           context,
           agentId,
-          MindLogType.Progress,
-          `### Ошибка выполнения команды\n\n\`\`\`\n${errorOutput}\n\`\`\``,
-          0.3,
-        )
+          type: MindLogType.Error,
+          data: `### Ошибка выполнения команды\n\n\`\`\`\n${errorOutput}\n\`\`\``,
+          quality: 0.3,
+        })
 
-        return { result: { error: errorOutput } }
+        return { result: `Возникла ошибка: ${errorOutput}` }
       }
     }
 
     default:
-      return { result: { error: `Неизвестный инструмент: ${name}` } }
+      if (Object.values<string>(MindLogType).includes(name)) {
+        return {
+          result: `Ошибка вызова несуществующего тулза ${name}. Если вы хотели записать MindLog, то следует вызывать тулзу ${toolName.createMindLogEntry}`,
+        }
+      }
+
+      return { result: `Неизвестный инструмент: ${name}` }
   }
 }

@@ -7,42 +7,68 @@ import { ApolloContext } from '../../../../context'
 /**
  * Асинхронная обработка вызовов инструментов OpenAI
  */
-export async function processToolCalls(
-  context: ApolloContext,
-  agentId: string,
-  toolCalls: ToolCall[],
-  messages: ChatCompletionMessageParam[],
-): Promise<{
-  updatedMessages: ChatCompletionMessageParam[]
-  isFinished: boolean
-  finalResult?: string
+
+type processToolCallsProps = {
+  context: ApolloContext
+  agentId: string
+  toolCalls: ToolCall[]
+  // messages: ChatCompletionMessageParam[]
+}
+
+export async function processToolCalls({
+  agentId,
+  context,
+  // messages,
+  toolCalls,
+}: processToolCallsProps): Promise<{
+  messages: ChatCompletionMessageParam[]
+  // isFinished: boolean
+  // finalResult?: string
 }> {
-  let isFinished = false
-  let finalResult: string | undefined = undefined
-  const updatedMessages = [...messages]
+  // let isFinished = false
+  // let finalResult: string | undefined = undefined
+  // const updatedMessages = [...messages]
+
+  const messages: ChatCompletionMessageParam[] = []
 
   console.log('toolCalls', toolCalls)
 
   for (const toolCall of toolCalls) {
     const {
       result,
-      finished,
-      finalResult: toolResult,
-    } = await handleToolCall(context, agentId, toolCall, messages)
+      // finished,
+      // finalResult: toolResult,
+    } = await handleToolCall({
+      context,
+      agentId,
+      toolCall,
+      // messages
+    })
 
     // Добавляем результат вызова инструмента в историю сообщений
-    updatedMessages.push({
+    // updatedMessages.push({
+    //   role: 'tool',
+    //   tool_call_id: toolCall.id,
+    //   content: result,
+    // })
+
+    messages.push({
       role: 'tool',
       tool_call_id: toolCall.id,
-      content: JSON.stringify(result),
+      content: result,
     })
 
     // Если это завершение обработки, сохраняем результат
-    if (finished) {
-      isFinished = true
-      finalResult = toolResult
-    }
+    // if (finished) {
+    //   isFinished = true
+    //   finalResult = result
+    // }
   }
 
-  return { updatedMessages, isFinished, finalResult }
+  return {
+    // updatedMessages,
+    messages,
+    // isFinished,
+    // finalResult,
+  }
 }
