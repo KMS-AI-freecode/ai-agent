@@ -14,15 +14,17 @@ const MainPageChatMessage = dynamic(
 
 import {
   MainPageChatMessagesStyled,
-  ChatInputStyled,
-  ChatMessagesStyled,
   ChatInputContainerStyled,
+  ChatInputStyled,
   SendButtonStyled,
+  ChatMessagesStyled,
   ErrorMessageStyled,
 } from './styles'
 
 import { ChatMessageFragment } from './Message/interfaces'
 import { useSendMessageMutation } from '../../gql/generated'
+
+import { SendArrowIcon, SpinnerIcon } from './icons'
 
 type MainPageChatMessagesProps = {
   //
@@ -136,15 +138,15 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
       return
     }
 
-    // Плавная прокрутка до последнего сообщения с задержкой
+    // Smooth scroll to the last message with delay
     const scrollTimeout = setTimeout(() => {
       messagesContainer.scrollTo({
         top: messagesContainer.scrollHeight,
         behavior: 'smooth',
       })
-    }, 500) // Задержка в 1 секунду
+    }, 500) // 1 second delay
 
-    // Очистка таймера при размонтировании компонента
+    // Clear timer when component unmounts
     return () => clearTimeout(scrollTimeout)
   }, [messages, messagesContainer])
 
@@ -162,7 +164,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
           <button
             className="close-button"
             onClick={handleErrorReset}
-            title="Закрыть"
+            title="Close"
           >
             ✕
           </button>
@@ -173,7 +175,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
           value={inputValue}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Введите ваше сообщение..."
+          placeholder="Enter your message..."
           disabled={inRequest}
         />
         <SendButtonStyled
@@ -181,7 +183,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
           disabled={!inputValue.trim() || inRequest}
           type="submit"
         >
-          {inRequest ? <div>Sending</div> : <div>Send</div>}
+          {inRequest ? <SpinnerIcon /> : <SendArrowIcon />}
         </SendButtonStyled>
       </ChatInputContainerStyled>
     </MainPageChatMessagesStyled>
