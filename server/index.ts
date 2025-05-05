@@ -9,13 +9,11 @@ import { json } from 'body-parser'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import path from 'path'
-import * as lancedb from '@lancedb/lancedb'
 import { renderGraphiQL } from 'graphql-helix'
 import fs from 'fs'
 
 // Импорт сервисов и модулей
 import { createApolloServer } from './apolloServer'
-import { initDatabase } from './db/migrations'
 import { ApolloContext } from './graphql/context'
 import { openaiClient } from './openaiClient'
 
@@ -50,17 +48,6 @@ async function startServer() {
   const expressApp = express()
   const httpServer = createServer(expressApp)
 
-  // Инициализация LanceDB соединения
-  const dbPath =
-    process.env.LANCEDB_PATH || path.join(process.cwd(), 'data', 'lancedb')
-
-  console.log(`Connecting to LanceDB at ${dbPath}`)
-
-  const lanceDbConnection = await lancedb.connect(dbPath)
-
-  // Инициализация базы данных и выполнение миграций
-  await initDatabase(lanceDbConnection)
-
   // Инициализация Apollo Server
   const apolloServer = createApolloServer(httpServer, enableIntrospection)
 
@@ -88,7 +75,6 @@ async function startServer() {
       context: async ({ req }) => {
         const context: ApolloContext = {
           req,
-          lanceDb: lanceDbConnection,
           services: {},
           openai: openaiClient,
         }

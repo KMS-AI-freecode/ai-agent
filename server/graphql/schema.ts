@@ -3,11 +3,11 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   GraphQLString,
-  GraphQLList,
+  // GraphQLList,
   GraphQLNonNull,
-  GraphQLInt,
-  GraphQLBoolean,
-  GraphQLInputObjectType,
+  // GraphQLInt,
+  // GraphQLBoolean,
+  // GraphQLInputObjectType,
 } from 'graphql'
 import { JSONScalar } from './scalars/json'
 import { resolvers } from './resolvers'
@@ -117,85 +117,13 @@ const MindLogTypeEnumType = new GraphQLEnumType({
   values: mindLogTypeValues,
 })
 
-// Определение типа MindLog
-const MindLogType = new GraphQLObjectType({
-  name: 'MindLog',
-  description: 'Запись в логе мышления',
-  fields: () => ({
-    id: { type: new GraphQLNonNull(GraphQLString) },
-    type: { type: new GraphQLNonNull(MindLogTypeEnumType) },
-    content: { type: new GraphQLNonNull(GraphQLString) },
-    createdAt: { type: new GraphQLNonNull(GraphQLString) },
-  }),
-})
-
-// Входные данные для создания MindLog
-const CreateMindLogInputType = new GraphQLInputObjectType({
-  name: 'CreateMindLogInput',
-  description: 'Входные данные для создания записи MindLog',
-  fields: {
-    type: { type: new GraphQLNonNull(MindLogTypeEnumType) },
-    content: { type: new GraphQLNonNull(GraphQLString) },
-  },
-})
-
 // Определение Query
 const QueryType = new GraphQLObjectType({
   name: 'Query',
   description: 'Корневые запросы',
   fields: () => ({
     foo: {
-      type: JSONScalar,
-      description: 'Заглушка, чтобы не потерять json',
-    },
-
-    // Получение записи MindLog по ID
-    mindLog: {
-      type: MindLogType,
-      description: 'Получение записи MindLog по ID',
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: resolvers.Query.mindLog,
-    },
-
-    // Получение всех записей MindLog
-    mindLogs: {
-      type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(MindLogType)),
-      ),
-      description: 'Получение всех записей MindLog',
-      resolve: resolvers.Query.mindLogs,
-    },
-
-    // Поиск записей MindLog по типу
-    mindLogsByType: {
-      type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(MindLogType)),
-      ),
-      description: 'Получение записей MindLog по типу',
-      args: {
-        type: { type: new GraphQLNonNull(MindLogTypeEnumType) },
-        limit: { type: GraphQLInt },
-      },
-      resolve: resolvers.Query.mindLogsByType,
-    },
-
-    // Векторный поиск похожих записей
-    searchSimilarLogs: {
-      type: new GraphQLNonNull(
-        new GraphQLList(new GraphQLNonNull(MindLogType)),
-      ),
-      description: 'Векторный поиск похожих записей',
-      args: {
-        vector: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(GraphQLInt)),
-          ),
-        },
-        limit: { type: GraphQLInt },
-      },
-      resolve: resolvers.Query.searchSimilarLogs,
+      type: GraphQLString,
     },
   }),
 })
@@ -205,31 +133,6 @@ const MutationType = new GraphQLObjectType({
   name: 'Mutation',
   description: 'Корневые мутации',
   fields: () => ({
-    // Создание новой записи MindLog
-    createMindLog: {
-      type: MindLogType,
-      description: 'Создание новой записи MindLog',
-      args: {
-        input: { type: new GraphQLNonNull(CreateMindLogInputType) },
-      },
-      resolve: resolvers.Mutation.createMindLog,
-    },
-
-    // Обновление векторного представления
-    updateVector: {
-      type: MindLogType,
-      description: 'Обновление векторного представления записи MindLog',
-      args: {
-        id: { type: new GraphQLNonNull(GraphQLString) },
-        vector: {
-          type: new GraphQLNonNull(
-            new GraphQLList(new GraphQLNonNull(GraphQLInt)),
-          ),
-        },
-      },
-      resolve: resolvers.Mutation.updateVector,
-    },
-
     // Обработка стимула
     sendMessage: {
       type: new GraphQLNonNull(GraphQLString),
@@ -239,13 +142,6 @@ const MutationType = new GraphQLObjectType({
       },
       resolve: resolvers.Mutation.processStimulus,
     },
-
-    // Удаление всех записей MindLog
-    deleteMindLogs: {
-      type: new GraphQLNonNull(GraphQLBoolean),
-      description: 'Удаление всех записей MindLog',
-      resolve: resolvers.Mutation.deleteMindLogs,
-    },
   }),
 })
 
@@ -253,4 +149,5 @@ const MutationType = new GraphQLObjectType({
 export const schema = new GraphQLSchema({
   query: QueryType,
   mutation: MutationType,
+  types: [MindLogTypeEnumType, JSONScalar],
 })

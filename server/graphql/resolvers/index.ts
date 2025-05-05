@@ -1,13 +1,4 @@
 import { MindLogType } from '../types/MindLog/interfaces'
-import {
-  getMindLogById,
-  getAllMindLogs,
-  findLogsByType,
-  findSimilarLogs,
-  createMindLog,
-  updateVector,
-  deleteMindLogs,
-} from '../types/MindLog/resolvers'
 
 import { JSONScalar } from '../scalars/json'
 import { processStimulus } from '../types/MindLog/helpers/processStimulus'
@@ -41,18 +32,9 @@ export const resolvers = {
   },
 
   // Разрешители запросов
-  Query: {
-    mindLog: getMindLogById,
-    mindLogs: getAllMindLogs,
-    mindLogsByType: findLogsByType,
-    searchSimilarLogs: findSimilarLogs,
-  },
+  Query: {},
 
-  // Разрешители мутаций
   Mutation: {
-    createMindLog,
-    updateVector,
     processStimulus,
-    deleteMindLogs,
   },
 }

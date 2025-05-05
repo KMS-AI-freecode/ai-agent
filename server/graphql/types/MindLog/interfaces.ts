@@ -31,16 +31,15 @@ export enum MindLogType {
  */
 export interface MindLogInput {
   type: MindLogType
-  content: string
+  data: string
 }
 
 /**
  * Модель записи MindLog
  */
-export interface MindLog extends MindLogInput {
+export type MindLog = {
   id: string
-  vector?: number[]
-  createdAt: string
+  type: MindLogType
   data: string
-  [key: string]: unknown // Индексная сигнатура для совместимости с Record<string, unknown>
+  createdAt: string
 }

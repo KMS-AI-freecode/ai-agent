@@ -24,7 +24,6 @@
     "@as-integrations/next": "^3.0.0",
     "@graphql-tools/schema": "^10.0.2",
     "@graphql-tools/utils": "^10.0.13",
-    "@lancedb/lancedb": "^0.19.0",
     "apollo-server-core": "^3.13.0",
     "cors": "^2.8.5",
     "cross-env": "^7.0.3",
