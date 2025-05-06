@@ -2,6 +2,7 @@
 
 import { ApolloContext } from '../../../context'
 import { MindLog, MindLogType } from '../interfaces'
+// import { worldManager } from '../../../../world'
 
 type createMindLogEntryProps = {
   context: ApolloContext
@@ -12,12 +13,14 @@ type createMindLogEntryProps = {
 }
 
 export async function createMindLogEntry({
-  context: _context,
+  context,
   data,
   type,
   agentId: _agentId,
   quality,
 }: createMindLogEntryProps) {
+  const { worldManager } = context
+
   quality
 
   const id = crypto.randomUUID()
@@ -29,6 +32,16 @@ export async function createMindLogEntry({
     data,
     type,
   }
+
+  // Добавляем майндлог в мир, если есть соединение в контексте
+  // if (_context.connection?.id) {
+  worldManager.addMindLogToWorld({
+    mindLogId: id,
+    data,
+    type,
+    // context.connection?.id
+  })
+  // }
 
   return record
 }

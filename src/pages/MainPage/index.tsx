@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { MainPageChat } from '../Chat'
+import { MainPageChat } from '../../Chat'
 
 export const MainPage: React.FC = () => {
   return (

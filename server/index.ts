@@ -14,8 +14,8 @@ import fs from 'fs'
 
 // Импорт сервисов и модулей
 import { createApolloServer } from './apolloServer'
-import { ApolloContext } from './graphql/context'
-import { openaiClient } from './openaiClient'
+import { createContext } from './graphql/context'
+import { WorldManager } from './world'
 
 // Загрузка переменных окружения
 dotenv.config()
@@ -48,6 +48,14 @@ async function startServer() {
   const expressApp = express()
   const httpServer = createServer(expressApp)
 
+  // Инициализация worldManager и Gun.js
+  // worldManager.initializeServer(httpServer)
+
+  const worldManager = new WorldManager(httpServer)
+
+  // Логируем успешную инициализацию
+  console.log('Gun.js сервер инициализирован через worldManager')
+
   // Инициализация Apollo Server
   const apolloServer = createApolloServer(httpServer, enableIntrospection)
 
@@ -72,14 +80,11 @@ async function startServer() {
     cors<cors.CorsRequest>(),
     json(),
     expressMiddleware(apolloServer, {
-      context: async ({ req }) => {
-        const context: ApolloContext = {
-          req,
-          services: {},
-          openai: openaiClient,
-        }
+      context: async (args) => {
+        // Создаем соединение для каждого запроса
+        // const connection = worldManager.createConnection(false)
 
-        return context
+        return createContext({ ...args, worldManager })
       },
     }),
   )
@@ -93,6 +98,7 @@ async function startServer() {
   httpServer.listen(port, () => {
     console.log(`> Server listening at http://localhost:${port}`)
     console.log(`> GraphQL API available at http://localhost:${port}/api`)
+    console.log(`> Gun.js server available at http://localhost:${port}/gun`)
     withPlayground &&
       console.log(
         `> GraphiQL interface available at http://localhost:${port}/graphiql`,
