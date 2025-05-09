@@ -5,7 +5,6 @@ import {
   MessageDateStyled,
 } from './styles'
 import { ChatMessageFragment } from './interfaces'
-import Link from 'next/link'
 
 type MainPageChatMessageProps = {
   message: ChatMessageFragment
@@ -34,9 +33,7 @@ export const MainPageChatMessage: React.FC<MainPageChatMessageProps> = ({
         <ReactMarkdown
           components={{
             a: ({ node: _node, href, ...props }) => (
-              <>
-                {href ? <Link href={href} {...props} /> : <span {...props} />}
-              </>
+              <>{href ? <a href={href} {...props} /> : <span {...props} />}</>
             ),
           }}
         >

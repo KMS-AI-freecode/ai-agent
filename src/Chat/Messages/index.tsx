@@ -1,4 +1,3 @@
-import dynamic from 'next/dynamic'
 import {
   ChangeEvent,
   KeyboardEvent,
@@ -7,10 +6,7 @@ import {
   useState,
 } from 'react'
 
-const MainPageChatMessage = dynamic(
-  () => import('./Message').then((m) => m.MainPageChatMessage),
-  { ssr: false },
-)
+import { MainPageChatMessage } from './Message'
 
 import {
   MainPageChatMessagesStyled,

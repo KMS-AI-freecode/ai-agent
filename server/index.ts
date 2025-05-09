@@ -3,7 +3,6 @@ import './config'
 
 import express from 'express'
 import { createServer } from 'http'
-import next from 'next'
 import { expressMiddleware } from '@apollo/server/express4'
 import { json } from 'body-parser'
 import cors from 'cors'
@@ -31,19 +30,12 @@ const defaultQuery = fs.readFileSync(graphiqlTemplatesPath, 'utf8')
 
 // Определение порта и режима
 const port = parseInt(process.env.PORT || '3000', 10)
-const dev = process.env.NODE_ENV !== 'production'
-
-const app = next({ dev })
-const handle = app.getRequestHandler()
 
 const withPlayground = process.env.GRAPHQL_DISABLE_PLAYGROUND !== 'true'
 const enableIntrospection = process.env.GRAPHQL_DISABLE_INTROSPECTION !== 'true'
 
 // Асинхронная функция для запуска сервера
 async function startServer() {
-  // Подготовка Next.js
-  await app.prepare()
-
   // Создание Express приложения
   const expressApp = express()
   const httpServer = createServer(expressApp)
@@ -89,10 +81,9 @@ async function startServer() {
     }),
   )
 
-  // Обработка всех остальных запросов через Next.js
-  expressApp.all('*', (req, res) => {
-    return handle(req, res)
-  })
+  // expressApp.all('*', (req, res) => {
+  //   return handle(req, res)
+  // })
 
   // Запуск сервера
   httpServer.listen(port, () => {
