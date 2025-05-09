@@ -11,6 +11,9 @@ import path from 'path'
 import { renderGraphiQL } from 'graphql-helix'
 import fs from 'fs'
 
+// Импорт интеграции с Vite
+import { setupViteServer } from './viteServer'
+
 // Импорт сервисов и модулей
 import { createApolloServer } from './apolloServer'
 import { createContext } from './graphql/context'
@@ -30,6 +33,7 @@ const defaultQuery = fs.readFileSync(graphiqlTemplatesPath, 'utf8')
 
 // Определение порта и режима
 const port = parseInt(process.env.PORT || '3000', 10)
+const isProd = process.env.NODE_ENV === 'production'
 
 const withPlayground = process.env.GRAPHQL_DISABLE_PLAYGROUND !== 'true'
 const enableIntrospection = process.env.GRAPHQL_DISABLE_INTROSPECTION !== 'true'
@@ -84,6 +88,9 @@ async function startServer() {
   // expressApp.all('*', (req, res) => {
   //   return handle(req, res)
   // })
+
+  // Интеграция с Vite (разработка) или раздача статики (production)
+  await setupViteServer(expressApp, isProd)
 
   // Запуск сервера
   httpServer.listen(port, () => {

@@ -16,7 +16,7 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.2; 
   }
 
-  #__next {
+  #root {
     display: contents;
   }
 
