@@ -7,11 +7,12 @@ import { AppThemeProvider } from './theme'
 import { World } from './World'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ApolloProvider client={client}>
-      <AppThemeProvider>
-        <World />
-      </AppThemeProvider>
-    </ApolloProvider>
-  </React.StrictMode>,
+  // Важно! Нельзя в React.StrictMode, потому что навешиваются двойные события
+  // <React.StrictMode>
+  <ApolloProvider client={client}>
+    <AppThemeProvider>
+      <World />
+    </AppThemeProvider>
+  </ApolloProvider>,
+  // </React.StrictMode>
 )

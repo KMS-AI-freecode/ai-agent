@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import React, { useEffect, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import {
@@ -10,8 +9,13 @@ import {
   GizmoViewport,
 } from '@react-three/drei'
 import Gun, { IGunInstance } from 'gun'
-import styled from 'styled-components'
 import * as THREE from 'three'
+import {
+  WorldCanvasContainerStyled,
+  WorldChatCanvasContainerStyled,
+  WorldStyled,
+} from './styles'
+import { Chat } from '../Chat'
 
 type Connection = {
   id: string
@@ -26,7 +30,7 @@ type Connection = {
 interface WorldObject {
   id: string
   type: string
-  data: string
+  data: string | undefined
   createdAt: string
   position: {
     x: number
@@ -37,14 +41,13 @@ interface WorldObject {
   belongsToPresent?: boolean
 }
 
-const CanvasContainer = styled.div`
-  width: 100%;
-  height: 100%;
-`
-
 // Компонент для отображения объекта мира
 const WorldObjectMesh: React.FC<{ object: WorldObject }> = ({ object }) => {
   const { position, type, data } = object
+
+  if (!data || !type || !position) {
+    return null
+  }
 
   // Определяем цвет в зависимости от типа
   const getColor = () => {
@@ -74,7 +77,7 @@ const WorldObjectMesh: React.FC<{ object: WorldObject }> = ({ object }) => {
         anchorY="middle"
         maxWidth={2}
       >
-        {data.length > 50 ? data.substring(0, 50) + '...' : data}
+        {data && data.length > 50 ? data.substring(0, 50) + '...' : data}
       </Text>
     </group>
   )
@@ -112,8 +115,6 @@ export const World: React.FC = () => {
   const cameraPositionRef = useRef<[number, number, number]>([0, 5, 10])
   const cameraTargetRef = useRef<[number, number, number]>([0, 0, 0])
 
-  console.log('connections', connections)
-
   useEffect(() => {
     // Инициализируем Gun.js
     const gun = Gun({
@@ -123,16 +124,11 @@ export const World: React.FC = () => {
       axe: false, // Отключаем Axe (необязательно, если ты его не используешь)
     })
 
-    console.log('gun', gun)
-
     gunRef.current = gun
 
     // Подписываемся на объекты мира
     const world = gun.get('world')
     world.map().on((data: WorldObject | null, id: string) => {
-      console.log('world.map().on data', data)
-      console.log('world.map().on id', id)
-
       if (data && id !== '_') {
         // Учитываем особенности Gun.js форматирования данных
         const validData: WorldObject = Object.keys(data).reduce((acc, key) => {
@@ -143,8 +139,6 @@ export const World: React.FC = () => {
           }
           return acc
         }, {} as unknown) as WorldObject
-
-        console.log('Extracted data', validData)
 
         if (Object.keys(validData).length > 0) {
           setObjects((prevObjects) => {
@@ -171,9 +165,6 @@ export const World: React.FC = () => {
     // Подписываемся на соединения
     const conns = gun.get('connections')
     conns.map().on<Connection>((data) => {
-      console.log('conns.map().on data', data)
-      console.log('conns.map().on keys', Object.keys(data))
-
       if (data && typeof data === 'object') {
         // Извлекаем ID из данных или используем свойство _['#']
         const id = data.id || data._?.['#']
@@ -187,8 +178,6 @@ export const World: React.FC = () => {
           }
           return acc
         }, {} as unknown) as WorldObject
-
-        console.log('Extracted connection data', validData)
 
         if (Object.keys(validData).length > 0 && id && id !== '_') {
           setConnections((prevConns) => {
@@ -224,114 +213,122 @@ export const World: React.FC = () => {
     cameraPositionRef.current = [xPos, 5, 20]
     // Смотрим на текущую позицию времени
     cameraTargetRef.current = [xPos, 0, 0]
-
-    console.log('Установка камеры на позицию времени', xPos)
   }, [])
 
   return (
-    <CanvasContainer>
-      <Canvas camera={{ position: cameraPositionRef.current, fov: 75 }} shadows>
-        {/* Показываем статистику производительности */}
-        <Stats />
+    <WorldStyled>
+      <WorldCanvasContainerStyled>
+        <Canvas
+          camera={{ position: cameraPositionRef.current, fov: 75 }}
+          shadows
+        >
+          {/* Показываем статистику производительности */}
+          <Stats />
 
-        {/* Помощник для навигации в 3D пространстве */}
-        <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
-          <GizmoViewport
-            labelColor="white"
-            axisColors={['#ff3653', '#0aad8c', '#2e83f2']}
+          {/* Помощник для навигации в 3D пространстве */}
+          <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+            <GizmoViewport
+              labelColor="white"
+              axisColors={['#ff3653', '#0aad8c', '#2e83f2']}
+            />
+          </GizmoHelper>
+
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} intensity={1} castShadow />
+
+          {/* Ось времени (X) */}
+          <group position={[cameraTargetRef.current[0], 0, 0]}>
+            <line>
+              <bufferGeometry
+                attach="geometry"
+                attributes={{
+                  position: new THREE.BufferAttribute(
+                    new Float32Array([-100, 0, 0, 100, 0, 0]),
+                    3,
+                  ),
+                }}
+              />
+              <lineBasicMaterial attach="material" color="red" />
+            </line>
+            <Text position={[10, 0.2, 0]} fontSize={0.3} color="red">
+              X (Время)
+            </Text>
+
+            {/* Ось Y */}
+            <line>
+              <bufferGeometry
+                attach="geometry"
+                attributes={{
+                  position: new THREE.BufferAttribute(
+                    new Float32Array([0, -50, 0, 0, 50, 0]),
+                    3,
+                  ),
+                }}
+              />
+              <lineBasicMaterial attach="material" color="green" />
+            </line>
+            <Text position={[0, 10, 0]} fontSize={0.3} color="green">
+              Y (Пользователи)
+            </Text>
+
+            {/* Ось Z */}
+            <line>
+              <bufferGeometry
+                attach="geometry"
+                attributes={{
+                  position: new THREE.BufferAttribute(
+                    new Float32Array([0, 0, -50, 0, 0, 50]),
+                    3,
+                  ),
+                }}
+              />
+              <lineBasicMaterial attach="material" color="blue" />
+            </line>
+            <Text position={[0, 0, 10]} fontSize={0.3} color="blue">
+              Z
+            </Text>
+          </group>
+
+          {/* Визуализация объектов мира */}
+          {objects.map((object) => {
+            // TODO Здесь не хватает типизации, так как притеть может и почти пустой объект
+            return <WorldObjectMesh key={object.id} object={object} />
+          })}
+
+          {/* Визуализация соединений */}
+          {connections.map((connection) => {
+            // Расчет позиции соединения (если есть координаты)
+            const position: [number, number, number] = connection.position
+              ? [
+                  connection.position.x,
+                  connection.position.y,
+                  connection.position.z,
+                ]
+              : [0, 0, 0]
+
+            return (
+              <ConnectionMesh
+                key={connection.id}
+                id={connection.id}
+                position={position}
+              />
+            )
+          })}
+
+          {/* OrbitControls с начальной позицией на основе текущего времени */}
+          <OrbitControls
+            target={cameraTargetRef.current}
+            enableDamping
+            dampingFactor={0.3}
+            // @ts-expect-error types
+            position={cameraPositionRef.current}
           />
-        </GizmoHelper>
+        </Canvas>
+      </WorldCanvasContainerStyled>
 
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} castShadow />
-
-        {/* Ось времени (X) */}
-        <group position={[cameraTargetRef.current[0], 0, 0]}>
-          <line>
-            <bufferGeometry
-              attach="geometry"
-              attributes={{
-                position: new THREE.BufferAttribute(
-                  new Float32Array([-100, 0, 0, 100, 0, 0]),
-                  3,
-                ),
-              }}
-            />
-            <lineBasicMaterial attach="material" color="red" />
-          </line>
-          <Text position={[10, 0.2, 0]} fontSize={0.3} color="red">
-            X (Время)
-          </Text>
-
-          {/* Ось Y */}
-          <line>
-            <bufferGeometry
-              attach="geometry"
-              attributes={{
-                position: new THREE.BufferAttribute(
-                  new Float32Array([0, -50, 0, 0, 50, 0]),
-                  3,
-                ),
-              }}
-            />
-            <lineBasicMaterial attach="material" color="green" />
-          </line>
-          <Text position={[0, 10, 0]} fontSize={0.3} color="green">
-            Y (Пользователи)
-          </Text>
-
-          {/* Ось Z */}
-          <line>
-            <bufferGeometry
-              attach="geometry"
-              attributes={{
-                position: new THREE.BufferAttribute(
-                  new Float32Array([0, 0, -50, 0, 0, 50]),
-                  3,
-                ),
-              }}
-            />
-            <lineBasicMaterial attach="material" color="blue" />
-          </line>
-          <Text position={[0, 0, 10]} fontSize={0.3} color="blue">
-            Z
-          </Text>
-        </group>
-
-        {/* Визуализация объектов мира */}
-        {objects.map((object) => (
-          <WorldObjectMesh key={object.id} object={object} />
-        ))}
-
-        {/* Визуализация соединений */}
-        {connections.map((connection) => {
-          // Расчет позиции соединения (если есть координаты)
-          const position: [number, number, number] = connection.position
-            ? [
-                connection.position.x,
-                connection.position.y,
-                connection.position.z,
-              ]
-            : [0, 0, 0]
-
-          return (
-            <ConnectionMesh
-              key={connection.id}
-              id={connection.id}
-              position={position}
-            />
-          )
-        })}
-
-        {/* OrbitControls с начальной позицией на основе текущего времени */}
-        <OrbitControls
-          target={cameraTargetRef.current}
-          enableDamping
-          dampingFactor={0.3}
-          // @ts-expect-error types
-          position={cameraPositionRef.current}
-        />
-      </Canvas>
-    </CanvasContainer>
+      <WorldChatCanvasContainerStyled>
+        <Chat />
+      </WorldChatCanvasContainerStyled>
+    </WorldStyled>
   )
 }

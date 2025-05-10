@@ -32,7 +32,7 @@ export const ChatInputStyled = styled.textarea`
   }
 `
 
-export const ChatInputContainerStyled = styled.form`
+export const ChatInputFormStyled = styled.form`
   display: flex;
   align-items: center;
   background-color: #fff;
@@ -73,7 +73,7 @@ export const ErrorMessageStyled = styled.div`
   }
 `
 
-export const ChatMessagesStyled = styled.div`
+export const ChatMessagesListStyled = styled.div`
   overflow-y: auto;
   padding: 20px;
   background-color: #fff;
@@ -84,7 +84,7 @@ export const ChatMessagesStyled = styled.div`
   gap: 10px;
 `
 
-export const MainPageChatMessagesStyled = styled.div`
+export const ChatMessagesStyled = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -94,7 +94,7 @@ export const MainPageChatMessagesStyled = styled.div`
   gap: 20px;
   height: 100%;
 
-  ${ChatMessagesStyled} {
+  ${ChatMessagesListStyled} {
     flex: 1;
   }
 `

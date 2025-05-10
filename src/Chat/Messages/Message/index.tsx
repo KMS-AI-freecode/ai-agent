@@ -6,11 +6,11 @@ import {
 } from './styles'
 import { ChatMessageFragment } from './interfaces'
 
-type MainPageChatMessageProps = {
+type ChatMessageProps = {
   message: ChatMessageFragment
 }
 
-export const MainPageChatMessage: React.FC<MainPageChatMessageProps> = ({
+export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   ...other
 }) => {

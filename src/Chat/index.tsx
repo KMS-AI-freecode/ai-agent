@@ -1,11 +1,11 @@
 import React from 'react'
-import { MainPageChatMessages } from './Messages'
-import { MainPageChatStyled } from './styles'
+import { ChatMessages } from './Messages'
+import { ChatStyled } from './styles'
 
-export const MainPageChat: React.FC = () => {
+export const Chat: React.FC = () => {
   return (
-    <MainPageChatStyled>
-      <MainPageChatMessages key="chat-content" />
-    </MainPageChatStyled>
+    <ChatStyled>
+      <ChatMessages key="chat-content" />
+    </ChatStyled>
   )
 }

@@ -6,11 +6,11 @@ import {
   useState,
 } from 'react'
 
-import { MainPageChatMessage } from './Message'
+import { ChatMessage } from './Message'
 
 import {
-  MainPageChatMessagesStyled,
-  ChatInputContainerStyled,
+  ChatMessagesListStyled,
+  ChatInputFormStyled,
   ChatInputStyled,
   SendButtonStyled,
   ChatMessagesStyled,
@@ -22,13 +22,11 @@ import { useSendMessageMutation } from '../../gql/generated'
 
 import { SendArrowIcon, SpinnerIcon } from './icons'
 
-type MainPageChatMessagesProps = {
+type ChatMessagesProps = {
   //
 }
 
-export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
-  ...other
-}) => {
+export const ChatMessages: React.FC<ChatMessagesProps> = ({ ...other }) => {
   const [messages, messagesSetter] = useState<ChatMessageFragment[]>([])
 
   const [error, errorSetter] = useState<Error | null>(null)
@@ -103,19 +101,18 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
     })
   }, [addMessageToOutput, createChatMessage])
 
-  const onSubmit = useCallback<React.FormEventHandler>(
-    (event) => {
-      event.preventDefault()
+  const onSubmit = useCallback<React.FormEventHandler>((event) => {
+    event.preventDefault()
 
-      handleSendMessage()
-    },
-    [handleSendMessage],
-  )
+    // handleSendMessage()
+  }, [])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && e.ctrlKey) {
         e.preventDefault()
+        e.stopPropagation()
+
         handleSendMessage()
       }
     },
@@ -147,12 +144,12 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
   }, [messages, messagesContainer])
 
   return (
-    <MainPageChatMessagesStyled {...other}>
-      <ChatMessagesStyled ref={messagesContainerSetter}>
+    <ChatMessagesStyled {...other}>
+      <ChatMessagesListStyled ref={messagesContainerSetter}>
         {messages.map((n, index) => (
-          <MainPageChatMessage key={index} message={n} />
+          <ChatMessage key={index} message={n} />
         ))}
-      </ChatMessagesStyled>
+      </ChatMessagesListStyled>
 
       {error && (
         <ErrorMessageStyled>
@@ -166,7 +163,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
           </button>
         </ErrorMessageStyled>
       )}
-      <ChatInputContainerStyled onSubmit={onSubmit}>
+      <ChatInputFormStyled onSubmit={onSubmit}>
         <ChatInputStyled
           value={inputValue}
           onChange={handleInputChange}
@@ -181,7 +178,7 @@ export const MainPageChatMessages: React.FC<MainPageChatMessagesProps> = ({
         >
           {inRequest ? <SpinnerIcon /> : <SendArrowIcon />}
         </SendButtonStyled>
-      </ChatInputContainerStyled>
-    </MainPageChatMessagesStyled>
+      </ChatInputFormStyled>
+    </ChatMessagesStyled>
   )
 }
