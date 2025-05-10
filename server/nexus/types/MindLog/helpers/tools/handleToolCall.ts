@@ -5,8 +5,9 @@ import { createMindLogEntry } from '../createMindLog'
 import { exec } from 'child_process'
 import * as os from 'os'
 import { MindLogType } from '../../interfaces'
-import { ApolloContext } from '../../../../context'
 import { toolName } from './interfaces'
+import { ApolloContext } from '../../../../../nexus/context'
+import { LowDbUser } from '../../../../../lowdb/interfaces'
 
 /**
  * Обработчик вызовов инструментов
@@ -14,13 +15,15 @@ import { toolName } from './interfaces'
 
 type handleToolCallProps = {
   context: ApolloContext
-  agentId: string
+  // agentId: string
+  user: LowDbUser
   toolCall: ToolCall
   // _messages: ChatCompletionMessageParam[],
 }
 
 export async function handleToolCall({
-  agentId,
+  // agentId,
+  user,
   context,
   toolCall,
 }: handleToolCallProps): Promise<{
@@ -34,7 +37,8 @@ export async function handleToolCall({
   console.log(`Tool Call: ${name}`, args)
   await createMindLogEntry({
     context,
-    agentId,
+    // agentId,
+    userId: user.id,
     type: MindLogType.Progress,
     data: `Вызов инструмента: ${name}, аргументы: ${argsString}`,
     quality: 0.5,
@@ -45,7 +49,7 @@ export async function handleToolCall({
       const { type, data, quality } = args
       const entry = await createMindLogEntry({
         context,
-        agentId,
+        userId: user.id,
         type: type as MindLogType,
         data,
         quality,
@@ -143,7 +147,7 @@ export async function handleToolCall({
 
         await createMindLogEntry({
           context,
-          agentId,
+          userId: user.id,
           type: MindLogType.Error,
           data: `### Ошибка выполнения команды\n\n\`\`\`\n${errorOutput}\n\`\`\``,
           quality: 0.3,

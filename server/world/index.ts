@@ -1,6 +1,7 @@
 import Gun from 'gun'
 import { Server } from 'http'
 import { Connection, GunData, GunInstance, WorldObject } from './interfaces'
+import { generateId } from '../utils/id'
 
 export class WorldManager {
   private gun: GunInstance
@@ -69,7 +70,7 @@ export class WorldManager {
     isAuthorized: boolean = false,
     userId?: string,
   ): Connection {
-    const connectionId = crypto.randomUUID()
+    const connectionId = generateId()
     const timestamp = Date.now()
     const connection: Connection = {
       id: connectionId,

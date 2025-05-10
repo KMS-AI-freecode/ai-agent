@@ -16,8 +16,9 @@ import { setupViteServer } from './viteServer'
 
 // Импорт сервисов и модулей
 import { createApolloServer } from './apolloServer'
-import { createContext } from './graphql/context'
-import { WorldManager } from './world'
+import { createLowDb } from './lowdb'
+import { createContext } from './nexus/context'
+// import { WorldManager } from './world'
 
 // Загрузка переменных окружения
 dotenv.config()
@@ -47,7 +48,9 @@ async function startServer() {
   // Инициализация worldManager и Gun.js
   // worldManager.initializeServer(httpServer)
 
-  const worldManager = new WorldManager(httpServer)
+  // const worldManager = new WorldManager(httpServer)
+
+  const lowDb = await createLowDb()
 
   // Логируем успешную инициализацию
   console.log('Gun.js сервер инициализирован через worldManager')
@@ -80,7 +83,11 @@ async function startServer() {
         // Создаем соединение для каждого запроса
         // const connection = worldManager.createConnection(false)
 
-        return createContext({ ...args, worldManager })
+        return createContext({
+          ...args,
+          // worldManager
+          lowDb,
+        })
       },
     }),
   )
@@ -93,7 +100,7 @@ async function startServer() {
   await setupViteServer(expressApp, isProd)
 
   // Запуск сервера
-  httpServer.listen(port, () => {
+  const serverInstance = httpServer.listen(port, () => {
     console.log(`> Server listening at http://localhost:${port}`)
     console.log(`> GraphQL API available at http://localhost:${port}/api`)
     console.log(`> Gun.js server available at http://localhost:${port}/gun`)
@@ -102,6 +109,48 @@ async function startServer() {
         `> GraphiQL interface available at http://localhost:${port}/graphiql`,
       )
   })
+
+  // Обработка остановки сервера
+  const gracefulShutdown = async () => {
+    console.log('Получен сигнал остановки, завершаю работу...')
+
+    try {
+      // Остановка Apollo Server
+      await apolloServer.stop()
+      console.log('Apollo Server остановлен')
+
+      // Закрытие HTTP сервера
+      serverInstance.close(() => {
+        console.log('HTTP сервер остановлен')
+
+        // Дополнительная очистка ресурсов
+        // Например, закрытие соединений с базой данных
+
+        console.log('Сервер корректно завершил работу')
+        process.exit(0)
+      })
+
+      /**
+       * Перед закрытием надо записать текущее состояние базы данных
+       */
+      await lowDb.write()
+
+      // Установка таймаута для принудительного завершения, если что-то зависнет
+      setTimeout(() => {
+        console.error(
+          'Не удалось корректно завершить работу за отведенное время, принудительное завершение',
+        )
+        process.exit(1)
+      }, 10000) // 10 секунд таймаут
+    } catch (error) {
+      console.error('Ошибка при остановке сервера:', error)
+      process.exit(1)
+    }
+  }
+
+  // Регистрация обработчиков сигналов остановки
+  process.on('SIGTERM', gracefulShutdown)
+  process.on('SIGINT', gracefulShutdown)
 }
 
 // Обработка ошибок при запуске сервера

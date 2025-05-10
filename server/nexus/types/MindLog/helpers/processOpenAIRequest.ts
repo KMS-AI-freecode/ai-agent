@@ -1,10 +1,11 @@
 /* eslint-disable no-console */
 import { ChatCompletionMessageParam } from 'openai/resources/chat'
-import { ApolloContext } from '../../../context'
 import { mindLogTools } from './tools/mindLogTools'
 import { createMindLogEntry } from './createMindLog'
 import { processToolCalls } from './tools/processToolCalls'
 import { MindLogType } from '../interfaces'
+import { ApolloContext } from '../../../../nexus/context'
+import { LowDbAgentData, LowDbUser } from '../../../../lowdb/interfaces'
 
 /**
  * Интерфейс для результата запроса к OpenAI
@@ -18,23 +19,46 @@ export interface OpenAIRequestResponse {
 
 type sendOpenAiRequestProps = {
   context: ApolloContext
-  agentId: string
+  // agentId: string
   // message: string,
   // systemPrompt: string
   // existingMessages?: ChatCompletionMessageParam[],
   recursionLevel: number
   messages: ChatCompletionMessageParam[]
+
+  /**
+   * Локальная запись пользователя ии-агента
+   */
+  aiAgentUser: LowDbUser
 }
 
 export async function sendOpenAiRequest({
   context,
-  agentId,
+  // agentId,
   // message: string,
   // systemPrompt,
   // existingMessages?: ChatCompletionMessageParam[],
   recursionLevel,
   messages,
+  aiAgentUser,
 }: sendOpenAiRequestProps): Promise<OpenAIRequestResponse> {
+  const { endpoint, model } = aiAgentUser.data ?? {}
+
+  if (!(typeof endpoint === 'string') || !endpoint) {
+    throw new Error('endpoint is empty')
+  }
+
+  if (!(typeof model === 'string') || !model) {
+    throw new Error('model is empty')
+  }
+
+  const aiAgentUserData: LowDbAgentData = {
+    endpoint,
+    model,
+  }
+
+  aiAgentUserData
+
   // Ограничение глубины рекурсии для безопасности
   const MAX_RECURSION = process.env.PROCESS_SMIMULUS_MAX_RECURSION
     ? parseInt(process.env.PROCESS_SMIMULUS_MAX_RECURSION)
@@ -42,7 +66,8 @@ export async function sendOpenAiRequest({
   if (recursionLevel > MAX_RECURSION) {
     await createMindLogEntry({
       context,
-      agentId,
+      // agentId,
+      userId: aiAgentUser.id,
       type: MindLogType.Error,
       data: `## Внимание
         
@@ -64,7 +89,7 @@ export async function sendOpenAiRequest({
 
     // Отправляем запрос к OpenAI
     const completion = await context.openai.chat.completions.create({
-      model: process.env.OPENAI_DEFAULT_MODEL || 'gpt-4.1-mini',
+      model: aiAgentUserData.model,
       messages,
       tools: mindLogTools,
       tool_choice: 'auto',
@@ -103,7 +128,7 @@ export async function sendOpenAiRequest({
         // Обрабатываем инструменты с ожиданием результата
         const toolCallsResult = await processToolCalls({
           context,
-          agentId,
+          user: aiAgentUser,
           toolCalls: responseMessage.tool_calls,
           // messages: updatedMessages,
         })
@@ -148,7 +173,8 @@ export async function sendOpenAiRequest({
         // )
 
         return await sendOpenAiRequest({
-          agentId,
+          // agentId,
+          aiAgentUser,
           context,
           messages: [
             ...messages,
@@ -172,7 +198,8 @@ export async function sendOpenAiRequest({
 
         await createMindLogEntry({
           context,
-          agentId,
+          // agentId,
+          userId: aiAgentUser.id,
           type: MindLogType.Error,
           data: `### Ошибка обработки инструментов
           
@@ -226,7 +253,8 @@ ${errorMessage}
     // Логируем ошибку
     await createMindLogEntry({
       context,
-      agentId,
+      // agentId,
+      userId: aiAgentUser.id,
       type: MindLogType.Error,
       data: `### Ошибка запроса к OpenAI
       

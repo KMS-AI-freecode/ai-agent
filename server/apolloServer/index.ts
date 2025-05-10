@@ -1,8 +1,11 @@
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { Server } from 'http'
-import { ApolloContext } from '../graphql/context'
-import { schema } from '../graphql/schema'
+import { applyMiddleware } from 'graphql-middleware'
+import { schema } from '../nexus'
+import { ApolloContext } from '../nexus/context'
+import { permissions } from './permissions'
+// import { schema } from '../graphql/schema'
 
 /**
  * Создает и настраивает экземпляр Apollo Server
@@ -16,7 +19,7 @@ export const createApolloServer = (
   enableIntrospection: boolean = true,
 ): ApolloServer<ApolloContext> => {
   const apolloServer = new ApolloServer<ApolloContext>({
-    schema,
+    schema: applyMiddleware(schema, permissions),
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     introspection: enableIntrospection,
   })

@@ -2,7 +2,8 @@
 import { ChatCompletionMessageParam } from 'openai/resources/chat'
 import { ToolCall } from '../interfaces'
 import { handleToolCall } from './handleToolCall'
-import { ApolloContext } from '../../../../context'
+import { ApolloContext } from '../../../../../nexus/context'
+import { LowDbUser } from '../../../../../lowdb/interfaces'
 
 /**
  * Асинхронная обработка вызовов инструментов OpenAI
@@ -10,13 +11,20 @@ import { ApolloContext } from '../../../../context'
 
 type processToolCallsProps = {
   context: ApolloContext
-  agentId: string
+  // agentId: string
   toolCalls: ToolCall[]
   // messages: ChatCompletionMessageParam[]
+
+  /**
+   * Объект пользователя, от имени которого вызывается тулза.
+   * По сути это будет пользователь внешнего ИИ-агента
+   */
+  user: LowDbUser
 }
 
 export async function processToolCalls({
-  agentId,
+  // agentId,
+  user,
   context,
   // messages,
   toolCalls,
@@ -40,7 +48,7 @@ export async function processToolCalls({
       // finalResult: toolResult,
     } = await handleToolCall({
       context,
-      agentId,
+      user,
       toolCall,
       // messages
     })
