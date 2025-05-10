@@ -125,6 +125,13 @@ const QueryType = new GraphQLObjectType({
     foo: {
       type: GraphQLString,
     },
+    getWorldObjects: {
+      // type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(JSONScalar))),
+      type: JSONScalar,
+      description:
+        'Получить все объекты из мира Gun.js. Доступен только в режиме разработки',
+      resolve: resolvers.Query.getWorldObjects,
+    },
   }),
 })
 

@@ -1,7 +1,7 @@
 import { MindLogType } from '../types/MindLog/interfaces'
-
 import { JSONScalar } from '../scalars/json'
 import { processStimulus } from '../types/MindLog/helpers/processStimulus'
+import { getWorldObjectsResolver } from '../types/Gun/resolvers/getWorldObjects'
 
 export const resolvers = {
   // GraphQL Scalars
@@ -32,7 +32,9 @@ export const resolvers = {
   },
 
   // Разрешители запросов
-  Query: {},
+  Query: {
+    getWorldObjects: getWorldObjectsResolver,
+  },
 
   Mutation: {
     processStimulus,
