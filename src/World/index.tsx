@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
+/* eslint-disable no-console */
+import React, { useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import {
   OrbitControls,
@@ -8,7 +9,6 @@ import {
   GizmoHelper,
   GizmoViewport,
 } from '@react-three/drei'
-import Gun, { IGunInstance } from 'gun'
 import * as THREE from 'three'
 import {
   WorldCanvasContainerStyled,
@@ -16,190 +16,22 @@ import {
   WorldStyled,
 } from './styles'
 import { Chat } from '../Chat'
-
-type Connection = {
-  id: string
-  position?: {
-    x: number
-    y: number
-    z: number
-  }
-}
-
-// Интерфейс для объектов мира
-interface WorldObject {
-  id: string
-  type: string
-  data: string | undefined
-  createdAt: string
-  position: {
-    x: number
-    y: number
-    z: number
-  }
-  parentId?: string
-  belongsToPresent?: boolean
-}
-
-// Компонент для отображения объекта мира
-const WorldObjectMesh: React.FC<{ object: WorldObject }> = ({ object }) => {
-  const { position, type, data } = object
-
-  if (!data || !type || !position) {
-    return null
-  }
-
-  // Определяем цвет в зависимости от типа
-  const getColor = () => {
-    switch (type) {
-      case 'THINKING':
-        return 'lightblue'
-      case 'OBSERVATION':
-        return 'green'
-      case 'MESSAGE':
-        return 'yellow'
-      default:
-        return 'white'
-    }
-  }
-
-  return (
-    <group position={[position.x, position.y, position.z]}>
-      <mesh>
-        <sphereGeometry args={[0.2, 16, 16]} />
-        <meshStandardMaterial color={getColor()} />
-      </mesh>
-      <Text
-        position={[0, 0.3, 0]}
-        fontSize={0.1}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={2}
-      >
-        {data && data.length > 50 ? data.substring(0, 50) + '...' : data}
-      </Text>
-    </group>
-  )
-}
-
-// Компонент для отображения соединения
-const ConnectionMesh: React.FC<{
-  position: [number, number, number]
-  id: string
-}> = ({ position, id }) => {
-  return (
-    <group position={position}>
-      <mesh>
-        <boxGeometry args={[0.5, 0.5, 0.5]} />
-        <meshStandardMaterial color="purple" />
-      </mesh>
-      <Text
-        position={[0, 0.5, 0]}
-        fontSize={0.1}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        Connection: {id.substring(0, 8)}
-      </Text>
-    </group>
-  )
-}
+import { useGetGunData } from './hooks/useGetGunData'
+import { WorldObjectMesh } from './Mesh/WorldObjectMesh'
+import { ConnectionMesh } from './Mesh/ConnectionMesh'
 
 // Главный компонент мира
 export const World: React.FC = () => {
-  const [objects, setObjects] = useState<WorldObject[]>([])
-  const [connections, setConnections] = useState<Connection[]>([])
-  const gunRef = useRef<IGunInstance | null>(null)
   const cameraPositionRef = useRef<[number, number, number]>([0, 5, 10])
   const cameraTargetRef = useRef<[number, number, number]>([0, 0, 0])
 
-  useEffect(() => {
-    // Инициализируем Gun.js
-    const gun = Gun({
-      peers: ['/gun'], // WebSocket-соединение на сервер
-      localStorage: false, // Отключаем localStorage
-      radisk: false, // Отключаем Radisk на клиенте
-      axe: false, // Отключаем Axe (необязательно, если ты его не используешь)
-    })
+  // eslint-disable-next-line no-console
+  console.log('World render')
 
-    gunRef.current = gun
+  const { objects, connections } = useGetGunData()
 
-    // Подписываемся на объекты мира
-    const world = gun.get('world')
-    world.map().on((data: WorldObject | null, id: string) => {
-      if (data && id !== '_') {
-        // Учитываем особенности Gun.js форматирования данных
-        const validData: WorldObject = Object.keys(data).reduce((acc, key) => {
-          // Игнорируем служебные поля Gun.js, начинающиеся с '_'
-          if (!key.startsWith('_')) {
-            // @ts-expect-error types
-            acc[key] = data[key]
-          }
-          return acc
-        }, {} as unknown) as WorldObject
-
-        if (Object.keys(validData).length > 0) {
-          setObjects((prevObjects) => {
-            // Проверяем, есть ли уже такой объект
-            const exists = prevObjects.some(
-              (obj) => obj.id === validData.id || obj.id === id,
-            )
-            if (exists) {
-              // Обновляем существующий объект
-              return prevObjects.map((obj) =>
-                obj.id === validData.id || obj.id === id
-                  ? { ...validData, id: validData.id || id }
-                  : obj,
-              )
-            } else {
-              // Добавляем новый объект
-              return [...prevObjects, { ...validData, id: validData.id || id }]
-            }
-          })
-        }
-      }
-    })
-
-    // Подписываемся на соединения
-    const conns = gun.get('connections')
-    conns.map().on<Connection>((data) => {
-      if (data && typeof data === 'object') {
-        // Извлекаем ID из данных или используем свойство _['#']
-        const id = data.id || data._?.['#']
-
-        // Учитываем особенности Gun.js форматирования данных
-        const validData: WorldObject = Object.keys(data).reduce((acc, key) => {
-          // Игнорируем служебные поля Gun.js, начинающиеся с '_'
-          if (!key.startsWith('_')) {
-            // @ts-expect-error types
-            acc[key] = data[key]
-          }
-          return acc
-        }, {} as unknown) as WorldObject
-
-        if (Object.keys(validData).length > 0 && id && id !== '_') {
-          setConnections((prevConns) => {
-            const exists = prevConns.some((conn) => conn.id === id)
-            if (exists) {
-              return prevConns.map((conn) =>
-                conn.id === id ? { ...validData, id } : conn,
-              )
-            } else {
-              return [...prevConns, { ...validData, id }]
-            }
-          })
-        }
-      }
-    })
-
-    return () => {
-      // Отписываемся при размонтировании
-      world.off()
-      conns.off()
-    }
-  }, [])
+  console.log('World objects', objects)
+  // console.log('World connections', connections)
 
   // Рассчитываем начальное положение камеры исходя из текущего времени
   useEffect(() => {
@@ -290,13 +122,13 @@ export const World: React.FC = () => {
           </group>
 
           {/* Визуализация объектов мира */}
-          {objects.map((object) => {
+          {/* {objects.map((object) => {
             // TODO Здесь не хватает типизации, так как притеть может и почти пустой объект
             return <WorldObjectMesh key={object.id} object={object} />
-          })}
+          })} */}
 
           {/* Визуализация соединений */}
-          {connections.map((connection) => {
+          {/* {connections.map((connection) => {
             // Расчет позиции соединения (если есть координаты)
             const position: [number, number, number] = connection.position
               ? [
@@ -313,7 +145,7 @@ export const World: React.FC = () => {
                 position={position}
               />
             )
-          })}
+          })} */}
 
           {/* OrbitControls с начальной позицией на основе текущего времени */}
           <OrbitControls
