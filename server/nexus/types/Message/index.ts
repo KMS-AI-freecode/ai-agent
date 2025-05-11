@@ -1,6 +1,8 @@
 import { extendType, nonNull, objectType } from 'nexus'
 import { sendMessageResolver } from './resolvers/sendMessage'
 import { resolve } from 'path'
+import { PUBSUB_MESSAGE_ADDED } from './interfaces'
+import { NexusGenObjects } from '../../generated/nexus'
 
 export const Message = objectType({
   name: 'Message',
@@ -38,6 +40,21 @@ export const MessageResponse = objectType({
     // })
     t.field('reply', {
       type: 'Message',
+    })
+  },
+})
+
+export const MessageExtendsSubscription = extendType({
+  type: 'Subscription',
+  definition(t) {
+    t.field<'messageAdded', NexusGenObjects['Message']>('messageAdded', {
+      type: 'Message',
+      subscribe(_, _args, ctx) {
+        return ctx.pubsub.asyncIterableIterator([PUBSUB_MESSAGE_ADDED])
+      },
+      resolve(messageData) {
+        return messageData
+      },
     })
   },
 })

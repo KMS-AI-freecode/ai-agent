@@ -4,6 +4,7 @@ import { processStimulus } from '../../MindLog/helpers/processStimulus'
 import { LowDbMessage } from '../../../../lowdb/interfaces'
 import { generateId } from '../../../../utils/id'
 import { NexusGenObjects } from '../../../generated/nexus'
+import { PUBSUB_MESSAGE_ADDED } from '../interfaces'
 
 export const sendMessageResolver: FieldResolver<
   'Mutation',
@@ -37,9 +38,12 @@ export const sendMessageResolver: FieldResolver<
     info,
   )
 
-  console.log('sendMessageResolver reply', reply)
+  // console.log('sendMessageResolver reply', reply)
 
   await lowDb.write()
+
+  // Публикуем сообщение для подписок
+  ctx.pubsub.publish(PUBSUB_MESSAGE_ADDED, message)
 
   return {
     reply,

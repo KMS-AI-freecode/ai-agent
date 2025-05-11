@@ -18,7 +18,6 @@ import { setupViteServer } from './viteServer'
 import { createApolloServer } from './apolloServer'
 import { createLowDb } from './lowdb'
 import { createContext } from './nexus/context'
-// import { WorldManager } from './world'
 
 // Загрузка переменных окружения
 dotenv.config()
@@ -45,18 +44,14 @@ async function startServer() {
   const expressApp = express()
   const httpServer = createServer(expressApp)
 
-  // Инициализация worldManager и Gun.js
-  // worldManager.initializeServer(httpServer)
-
-  // const worldManager = new WorldManager(httpServer)
-
   const lowDb = await createLowDb()
 
-  // Логируем успешную инициализацию
-  console.log('Gun.js сервер инициализирован через worldManager')
-
-  // Инициализация Apollo Server
-  const apolloServer = createApolloServer(httpServer, enableIntrospection)
+  // Инициализация Apollo Server с поддержкой WebSocket подписок
+  const { server: apolloServer } = createApolloServer({
+    httpServer,
+    enableIntrospection,
+    lowDb,
+  })
 
   // Запуск Apollo Server
   await apolloServer.start()
@@ -103,7 +98,9 @@ async function startServer() {
   const serverInstance = httpServer.listen(port, () => {
     console.log(`> Server listening at http://localhost:${port}`)
     console.log(`> GraphQL API available at http://localhost:${port}/api`)
-    console.log(`> Gun.js server available at http://localhost:${port}/gun`)
+    console.log(
+      `> GraphQL Subscriptions available at ws://localhost:${port}/api`,
+    )
     withPlayground &&
       console.log(
         `> GraphiQL interface available at http://localhost:${port}/graphiql`,

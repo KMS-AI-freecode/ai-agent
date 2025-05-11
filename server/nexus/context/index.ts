@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
 import { ContextFunction } from '@apollo/server'
 import { ExpressContextFunctionArgument } from '@apollo/server/dist/esm/express4'
-import { Request } from 'express'
 import OpenAI from 'openai'
 import jwt from 'jsonwebtoken'
 import { openaiClient } from '../../openaiClient'
 // import { WorldManager } from '../../world'
 import { Low } from 'lowdb/lib'
 import { LowDbData, LowDbUser } from '../../lowdb/interfaces'
+import { pubsub } from './PubSub'
 
 const APP_SECRET = process.env.APP_SECRET
 
@@ -23,7 +23,6 @@ if (!OPENAI_API_BASE_URL) {
 
 export interface ApolloContext {
   APP_SECRET: string
-  req: Request
   services: Record<string, unknown>
   openai: OpenAI
   // aiAgent?: { id: string }
@@ -34,13 +33,17 @@ export interface ApolloContext {
   // Authorized user
   currentUser: LowDbUser | undefined | null
   OPENAI_API_BASE_URL: string
+
+  pubsub: typeof pubsub
 }
 
 export const createContext: ContextFunction<
   [
-    ExpressContextFunctionArgument & {
+    // ExpressContextFunctionArgument &
+    {
       // worldManager: ApolloContext['worldManager']
       lowDb: ApolloContext['lowDb']
+      req: ExpressContextFunctionArgument['req'] | undefined
     },
   ],
   ApolloContext
@@ -49,7 +52,7 @@ export const createContext: ContextFunction<
   /**
    * Если есть токен, пытаемся получить текущего пользователя
    */
-  if (req.headers.authorization) {
+  if (req?.headers.authorization) {
     try {
       const token = req.headers.authorization.replace('Bearer ', '')
       const tokenData = jwt.verify(token, APP_SECRET)
@@ -68,7 +71,6 @@ export const createContext: ContextFunction<
 
   const context: ApolloContext = {
     APP_SECRET,
-    req,
     services: {},
     openai: openaiClient,
     // connection: { id: connection.id }
@@ -77,6 +79,7 @@ export const createContext: ContextFunction<
     lowDb,
     currentUser,
     OPENAI_API_BASE_URL,
+    pubsub,
   }
 
   return context
