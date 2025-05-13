@@ -1,4 +1,10 @@
 # Создание новой записи MindLog
 mutation sendMessage($text: String!) {
-  sendMessage(content: $text)
+  sendMessage(text: $text) {
+    reply {
+      id
+      text
+      createdAt
+    }
+  }
 }

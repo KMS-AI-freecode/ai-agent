@@ -6,7 +6,7 @@ import { OUTPUT_PATH } from './constants'
 export const generateSchema = async () => {
   await codegen.generate(
     {
-      schema: path.resolve(process.cwd(), 'server/graphql/schema.ts'),
+      schema: path.resolve(process.cwd(), 'server/nexus/index.ts'),
       generates: {
         [path.resolve(OUTPUT_PATH, 'schema.json')]: {
           plugins: [{ introspection: {} }],

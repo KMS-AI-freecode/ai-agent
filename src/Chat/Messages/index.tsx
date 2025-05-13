@@ -86,8 +86,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ ...other }) => {
           if (r.data?.sendMessage) {
             const message = r.data.sendMessage
 
-            if (message) {
-              addMessageToOutput(message, 'agent')
+            if (message.reply?.text) {
+              addMessageToOutput(message.reply.text, 'agent')
               setInputValue('')
             }
           }

@@ -1,5 +1,4 @@
 import React, { useContext, useMemo, useReducer } from 'react'
-import Gun, { IGunInstance } from 'gun'
 
 import { WorldObject } from '../interfaces'
 
@@ -17,7 +16,6 @@ type WorldAction =
   | { type: WorldActionType.RESET_OBJECTS; payload: WorldObject[] }
 
 type WorldContextValue = {
-  gun: IGunInstance
   objects: WorldObject[]
   dispatch: React.Dispatch<WorldAction>
 }
@@ -52,25 +50,12 @@ export const WorldContextProvider: React.FC<React.PropsWithChildren> = ({
 }) => {
   const [objects, dispatch] = useReducer(worldReducer, [])
 
-  const gun = useMemo(() => {
-    // Инициализируем Gun.js
-    const gun = Gun({
-      peers: ['/gun'], // WebSocket-соединение на сервер
-      localStorage: false, // Отключаем localStorage
-      radisk: false, // Отключаем Radisk на клиенте
-      axe: false, // Отключаем Axe (необязательно, если ты его не используешь)
-    })
-
-    return gun
-  }, [])
-
   const contextValue = useMemo(() => {
     return {
-      gun,
       objects,
       dispatch,
     }
-  }, [gun, objects])
+  }, [objects])
 
   return (
     <WorldContext.Provider value={contextValue}>

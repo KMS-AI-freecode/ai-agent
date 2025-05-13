@@ -16,9 +16,8 @@ import {
   WorldStyled,
 } from './styles'
 import { Chat } from '../Chat'
-import { useGetGunData } from './hooks/useGetGunData'
-import { WorldObjectMesh } from './Mesh/WorldObjectMesh'
-import { ConnectionMesh } from './Mesh/ConnectionMesh'
+// import { WorldObjectMesh } from './Mesh/WorldObjectMesh'
+// import { ConnectionMesh } from './Mesh/ConnectionMesh'
 
 // Главный компонент мира
 export const World: React.FC = () => {
@@ -28,9 +27,6 @@ export const World: React.FC = () => {
   // eslint-disable-next-line no-console
   console.log('World render')
 
-  const { objects, connections } = useGetGunData()
-
-  console.log('World objects', objects)
   // console.log('World connections', connections)
 
   // Рассчитываем начальное положение камеры исходя из текущего времени
