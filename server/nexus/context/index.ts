@@ -8,6 +8,7 @@ import { openaiClient } from '../../openaiClient'
 import { Low } from 'lowdb/lib'
 import { LowDbData, LowDbUser } from '../../lowdb/interfaces'
 import { pubsub } from './PubSub'
+import { knowledges } from './knowledges'
 
 const APP_SECRET = process.env.APP_SECRET
 
@@ -35,6 +36,8 @@ export interface ApolloContext {
   OPENAI_API_BASE_URL: string
 
   pubsub: typeof pubsub
+
+  knowledges: typeof knowledges
 }
 
 export const createContext: ContextFunction<
@@ -80,6 +83,7 @@ export const createContext: ContextFunction<
     currentUser,
     OPENAI_API_BASE_URL,
     pubsub,
+    knowledges,
   }
 
   return context

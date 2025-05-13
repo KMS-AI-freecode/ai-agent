@@ -4,9 +4,11 @@ services:
     build: .
     volumes:
       - ./shared:/app/shared
+      - data:/app/data
     stdin_open: true
     tty: true
     command: 'npm run start'
-    restart: unless-stopped
     env_file:
       - .env
+volumes:
+  data:

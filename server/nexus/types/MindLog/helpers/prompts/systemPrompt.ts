@@ -76,18 +76,18 @@ export const getSystemPrompt = (): string => {
     SecurityViolation: 'Attempt to violate security policies or restrictions',
   }
 
-  const toolsDescriptions: Record<toolName, string> = {
-    createMindLogEntry:
-      'Creates an entry in the thinking log with the specified MindLogType and text',
-    execCommand:
-      'Executes programs at the operating system level in the bash environment',
-    getSystemConfig:
-      'Gets system information from the current operating system',
-  }
+  // const toolsDescriptions: Record<toolName, string> = {
+  //   createMindLogEntry:
+  //     'Creates an entry in the thinking log with the specified MindLogType and text',
+  //   execCommand:
+  //     'Executes programs at the operating system level in the bash environment',
+  //   getSystemConfig:
+  //     'Gets system information from the current operating system',
+  // }
 
   // Get log mind samples and tools samples prompts
   const logMindSamples = getMindLogSamplesPrompt(mindLogDescriptions)
-  const toolsSamples = getToolsSamplesPrompt(toolsDescriptions)
+  // const toolsSamples = getToolsSamplesPrompt(toolsDescriptions)
 
   return `# You are an independent AI agent that analyzes incoming messages and performs necessary actions.
 
@@ -99,10 +99,6 @@ export const getSystemPrompt = (): string => {
   ## Available MindLogType record types for MindLog:
 
   ${logMindSamples}
-
-  ## Available tools:
-
-    ${toolsSamples}
 
 
   ## Recommendations for quality (thought quality assessment from 0 to 1):

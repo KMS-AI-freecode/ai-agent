@@ -1,7 +1,7 @@
 import { shield } from 'graphql-shield'
 import { Rule } from 'graphql-shield/typings/rules'
 import { NexusGenFieldTypes } from '../../nexus/generated/nexus'
-import { isAuthenticated } from './rules/isAuthenticated'
+// import { isAuthenticated } from './rules/isAuthenticated'
 import { isInDevMode } from './rules/isInDevMode'
 
 type RuleTree<K extends NexusGenFieldTypes> = {
@@ -21,7 +21,7 @@ const ruleTree: RuleTree<NexusGenFieldTypes> = {
     users: isInDevMode,
   },
   Mutation: {
-    sendMessage: isAuthenticated,
+    // sendMessage: isAuthenticated,
   },
 }
 
