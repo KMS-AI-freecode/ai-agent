@@ -8,7 +8,8 @@ import { MindLogType } from '../../interfaces'
 import { toolName } from './interfaces'
 import { ApolloContext } from '../../../../../nexus/context'
 import { LowDbUser } from '../../../../../lowdb/interfaces'
-import { Knowledge, knowledges } from '../../../../context/knowledges'
+import { Skill } from '../../../../context/skills'
+import { getUser } from '../../../../../lowdb/helpers'
 // import { getUser } from '../../../../../lowdb/helpers'
 
 /**
@@ -16,7 +17,7 @@ import { Knowledge, knowledges } from '../../../../context/knowledges'
  */
 
 type handleToolCallProps = {
-  context: ApolloContext
+  ctx: ApolloContext
   // agentId: string
   user: LowDbUser
   toolCall: ToolCall
@@ -26,19 +27,31 @@ type handleToolCallProps = {
 export async function handleToolCall({
   // agentId,
   user,
-  context,
+  ctx,
   toolCall,
 }: handleToolCallProps): Promise<{
   result: string
   // finished?: boolean
 }> {
+  const { lowDb } = ctx
+
+  const agent = lowDb.data.agent
+
+  if (!agent) {
+    throw new Error('Can not get agent')
+  }
+
+  const localAgentUser = getUser(agent.userId, ctx)
+
+  const { Skills: skills } = localAgentUser
+
   const { name, arguments: argsString } = toolCall.function
   const args = JSON.parse(argsString)
 
   // Логируем вызов инструмента с аргументами
   console.log(`Tool Call: ${name}`, args)
   await createMindLogEntry({
-    context,
+    ctx,
     // agentId,
     userId: user.id,
     type: MindLogType.Progress,
@@ -50,7 +63,7 @@ export async function handleToolCall({
     case toolName.createMindLogEntry: {
       const { type, data, quality } = args
       const entry = await createMindLogEntry({
-        context,
+        ctx,
         userId: user.id,
         type: type as MindLogType,
         data,
@@ -64,7 +77,7 @@ export async function handleToolCall({
     //     args
     //   // Создаем итоговую запись
     //   await createMindLogEntry(
-    //     context,
+    //     ctx,
     //     agentId,
     //     MindLogType.Result,
     //     result,
@@ -102,7 +115,7 @@ ${JSON.stringify(config, null, 2)}
 \`\`\``
 
       // await createMindLogEntry({
-      //   context,
+      //   ctx,
       //   agentId,
       //   type: MindLogType.Progress,
       //   data: result,
@@ -116,7 +129,7 @@ ${JSON.stringify(config, null, 2)}
       const { command } = args
 
       // await createMindLogEntry({
-      //   context,
+      //   ctx,
       //   agentId,
       //   type: MindLogType.Action,
       //   data: `### Выполнение команды
@@ -140,7 +153,7 @@ ${JSON.stringify(config, null, 2)}
         })
 
         // await createMindLogEntry({
-        //   context,
+        //   ctx,
         //   agentId,
         //   type: MindLogType.Progress,
         //   data: `### Результат выполнения команды
@@ -156,7 +169,7 @@ ${JSON.stringify(config, null, 2)}
         const errorOutput = String(error)
 
         await createMindLogEntry({
-          context,
+          ctx,
           userId: user.id,
           type: MindLogType.Error,
           data: `### Ошибка выполнения команды
@@ -172,44 +185,44 @@ ${errorOutput}
     }
 
     // Инструменты для работы со знаниями
-    case toolName.getAllKnowledges: {
+    case toolName.getAllSkills: {
       // Формируем список знаний в удобном для вывода формате
-      const knowledgeList = knowledges.map((knowledge, index) => ({
+      const skillList = skills.map((skill, index) => ({
         index,
-        description: knowledge.description,
-        pattern: knowledge.query.toString(),
-        functionBody: knowledge.fn.toString(),
+        description: skill.description,
+        pattern: skill.query.toString(),
+        functionBody: skill.fn.toString(),
       }))
 
       return {
-        result: JSON.stringify(knowledgeList, null, 2),
+        result: JSON.stringify(skillList, null, 2),
       }
     }
 
-    // case toolName.getKnowledge: {
+    // case toolName.getSkill: {
     //   const { index } = args
 
-    //   if (index < 0 || index >= knowledges.length) {
+    //   if (index < 0 || index >= skills.length) {
     //     return {
     //       result: `Ошибка: Знание с индексом ${index} не найдено`,
     //     }
     //   }
 
     //   // Получаем знание по индексу и форматируем его для вывода
-    //   const knowledge = knowledges[index]
-    //   const knowledgeInfo = {
+    //   const skill = skills[index]
+    //   const skillInfo = {
     //     index,
-    //     description: knowledge.description,
-    //     pattern: knowledge.query.toString(),
-    //     functionBody: knowledge.fn.toString(),
+    //     description: skill.description,
+    //     pattern: skill.query.toString(),
+    //     functionBody: skill.fn.toString(),
     //   }
 
     //   return {
-    //     result: JSON.stringify(knowledgeInfo, null, 2),
+    //     result: JSON.stringify(skillInfo, null, 2),
     //   }
     // }
 
-    case toolName.addKnowledge: {
+    case toolName.addSkill: {
       const {
         description,
         pattern,
@@ -231,23 +244,27 @@ ${errorOutput}
         const fn = Function.apply(null, [
           ...functionArguments,
           functionBody,
-        ]) as Knowledge['fn']
+        ]) as Skill['fn']
 
         // Добавляем новое знание в массив
-        knowledges.push({
+        skills.push({
           description,
           query: regexPattern,
           fn,
         })
 
+        console.log('skills', user.Skills)
+
+        await lowDb.write()
+
         return {
-          result: `Знание успешно добавлено. Текущий индекс: ${knowledges.length - 1}`,
+          result: `Знание успешно добавлено. Текущий индекс: ${skills.length - 1}`,
         }
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
         await createMindLogEntry({
-          context,
+          ctx,
           userId: user.id,
           type: MindLogType.Error,
           data: `### Ошибка добавления знания
@@ -264,10 +281,10 @@ ${errorMessage}
       }
     }
 
-    //     case toolName.updateKnowledge: {
+    //     case toolName.updateSkill: {
     //       const { index, description, pattern, functionBody } = args
 
-    //       if (index < 0 || index >= knowledges.length) {
+    //       if (index < 0 || index >= skills.length) {
     //         return {
     //           result: `Ошибка: Знание с индексом ${index} не найдено`,
     //         }
@@ -276,16 +293,16 @@ ${errorMessage}
     //       try {
     //         // Обновляем поля знания, если они были предоставлены
     //         if (description) {
-    //           knowledges[index].description = description
+    //           skills[index].description = description
     //         }
 
     //         if (pattern) {
-    //           knowledges[index].query = new RegExp(pattern)
+    //           skills[index].query = new RegExp(pattern)
     //         }
 
     //         if (functionBody) {
     //           // eslint-disable-next-line no-new-func
-    //           knowledges[index].fn = new Function(functionBody)()
+    //           skills[index].fn = new Function(functionBody)()
     //         }
 
     //         return {
@@ -295,7 +312,7 @@ ${errorMessage}
     //         const errorMessage =
     //           error instanceof Error ? error.message : String(error)
     //         await createMindLogEntry({
-    //           context,
+    //           ctx,
     //           userId: user.id,
     //           type: MindLogType.Error,
     //           data: `### Ошибка обновления знания
@@ -312,17 +329,17 @@ ${errorMessage}
     //       }
     //     }
 
-    //     case toolName.deleteKnowledge: {
+    //     case toolName.deleteSkill: {
     //       const { index } = args
 
-    //       if (index < 0 || index >= knowledges.length) {
+    //       if (index < 0 || index >= skills.length) {
     //         return {
     //           result: `Ошибка: Знание с индексом ${index} не найдено`,
     //         }
     //       }
 
     //       // Удаляем знание из массива
-    //       knowledges.splice(index, 1)
+    //       skills.splice(index, 1)
 
     //       return {
     //         result: `Знание с индексом ${index} успешно удалено`,
@@ -335,7 +352,7 @@ ${errorMessage}
 
     //       try {
     //         // Получаем пользователя
-    //         const targetUser = getUser(userId, context)
+    //         const targetUser = getUser(userId, ctx)
 
     //         if (!targetUser) {
     //           return {
@@ -359,7 +376,7 @@ ${errorMessage}
     //         const errorMessage =
     //           error instanceof Error ? error.message : String(error)
     //         await createMindLogEntry({
-    //           context,
+    //           ctx,
     //           userId: user.id,
     //           type: MindLogType.Error,
     //           data: `### Ошибка получения майндлогов
@@ -381,7 +398,7 @@ ${errorMessage}
 
     //       try {
     //         // Получаем пользователя
-    //         const targetUser = getUser(userId, context)
+    //         const targetUser = getUser(userId, ctx)
 
     //         if (!targetUser) {
     //           return {
@@ -405,7 +422,7 @@ ${errorMessage}
     //         const errorMessage =
     //           error instanceof Error ? error.message : String(error)
     //         await createMindLogEntry({
-    //           context,
+    //           ctx,
     //           userId: user.id,
     //           type: MindLogType.Error,
     //           data: `### Ошибка получения майндлога
@@ -427,7 +444,7 @@ ${errorMessage}
 
     //       try {
     //         // Получаем пользователя
-    //         const targetUser = getUser(userId, context)
+    //         const targetUser = getUser(userId, ctx)
 
     //         if (!targetUser) {
     //           return {
@@ -465,7 +482,7 @@ ${errorMessage}
     //         const errorMessage =
     //           error instanceof Error ? error.message : String(error)
     //         await createMindLogEntry({
-    //           context,
+    //           ctx,
     //           userId: user.id,
     //           type: MindLogType.Error,
     //           data: `### Ошибка обновления майндлога
@@ -487,7 +504,7 @@ ${errorMessage}
 
     //       try {
     //         // Получаем пользователя
-    //         const targetUser = getUser(userId, context)
+    //         const targetUser = getUser(userId, ctx)
 
     //         if (!targetUser) {
     //           return {
@@ -516,7 +533,7 @@ ${errorMessage}
     //         const errorMessage =
     //           error instanceof Error ? error.message : String(error)
     //         await createMindLogEntry({
-    //           context,
+    //           ctx,
     //           userId: user.id,
     //           type: MindLogType.Error,
     //           data: `### Ошибка удаления майндлога

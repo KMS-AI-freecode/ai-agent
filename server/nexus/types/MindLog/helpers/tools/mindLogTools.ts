@@ -86,7 +86,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: toolName.getAllKnowledges,
+      name: toolName.getAllSkills,
       description: 'Возвращает список всех знаний',
       parameters: {
         type: 'object',
@@ -97,7 +97,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
-      name: toolName.addKnowledge,
+      name: toolName.addSkill,
       description: 'Добавляет новое знание',
       parameters: {
         type: 'object',
@@ -131,7 +131,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   // {
   //   type: 'function',
   //   function: {
-  //     name: toolName.updateKnowledge,
+  //     name: toolName.updateSkill,
   //     description: 'Обновляет существующее знание',
   //     parameters: {
   //       type: 'object',
@@ -160,7 +160,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   // {
   //   type: 'function',
   //   function: {
-  //     name: toolName.deleteKnowledge,
+  //     name: toolName.deleteSkill,
   //     description: 'Удаляет знание по индексу',
   //     parameters: {
   //       type: 'object',
@@ -177,7 +177,7 @@ export const mindLogTools: ChatCompletionTool[] = [
   // {
   //   type: 'function',
   //   function: {
-  //     name: toolName.getKnowledge,
+  //     name: toolName.getSkill,
   //     description: 'Получает одно знание по индексу',
   //     parameters: {
   //       type: 'object',

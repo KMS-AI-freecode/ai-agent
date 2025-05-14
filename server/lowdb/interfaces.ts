@@ -3,6 +3,7 @@
 //   data: string
 // }
 
+import { Skill } from '../nexus/context/skills'
 import { NexusGenEnums } from '../nexus/generated/nexus'
 
 // type LowDbMessage = {
@@ -36,6 +37,7 @@ export type LowDbUser = {
   data?: Record<string, unknown>
   Messages: LowDbMessage[]
   MindLogs: LowDbMindlog[]
+  Skills: Skill[]
 }
 
 export type LowDbMindlog = {

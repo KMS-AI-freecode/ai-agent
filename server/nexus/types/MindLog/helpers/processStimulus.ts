@@ -55,6 +55,7 @@ export const processStimulus: GraphQLFieldResolver<
       name: agentData.model,
       Messages: [],
       MindLogs: [],
+      Skills: [],
       data: agentData,
     }
 
@@ -71,7 +72,7 @@ export const processStimulus: GraphQLFieldResolver<
   }
 
   await createMindLogEntry({
-    context,
+    ctx: context,
     userId: agent.userId,
     type: MindLogType.Stimulus,
     data: `### New stimulus
@@ -104,7 +105,7 @@ ${text}
 
   // Create final entry
   await createMindLogEntry({
-    context,
+    ctx: context,
     userId: agent.userId,
     type: MindLogType.Result,
     data: `Final result: ${response.message}`,

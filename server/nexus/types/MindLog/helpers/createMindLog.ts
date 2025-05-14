@@ -10,7 +10,7 @@ import { NexusGenEnums } from '../../../generated/nexus'
 // import { worldManager } from '../../../../world'
 
 type createMindLogEntryProps = {
-  context: ApolloContext
+  ctx: ApolloContext
   // agentId?: string
 
   /**
@@ -23,7 +23,7 @@ type createMindLogEntryProps = {
 }
 
 export async function createMindLogEntry({
-  context,
+  ctx: context,
   data,
   type,
   // agentId: _agentId,

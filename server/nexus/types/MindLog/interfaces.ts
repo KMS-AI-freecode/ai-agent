@@ -26,7 +26,7 @@ export enum MindLogType {
   Suggestion = 'Suggestion',
   OptimizedMemory = 'OptimizedMemory',
   ForgottenMemory = 'ForgottenMemory',
-  ChunkedKnowledge = 'ChunkedKnowledge',
+  ChunkedSkill = 'ChunkedSkill',
   ReinforcedAction = 'ReinforcedAction',
   Mentoring = 'Mentoring',
   Guidance = 'Guidance',

@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { getUser } from '../../../../../../lowdb/helpers'
 import { LowDbMessage } from '../../../../../../lowdb/interfaces'
 import { ApolloContext } from '../../../../../context'
 
@@ -16,13 +17,21 @@ export async function processMessage({
     }
   | undefined
 > {
-  const { knowledges } = ctx
+  const { lowDb } = ctx
+
+  const { agent } = lowDb.data
+
+  if (!agent) {
+    throw new Error('Have no agent')
+  }
+
+  const skills = getUser(agent.userId, ctx).Skills
 
   console.log('processMessage message', message)
 
   let result: string | undefined
 
-  for (const processor of knowledges) {
+  for (const processor of skills) {
     const match = message.text.match(processor.query)
 
     if (match) {

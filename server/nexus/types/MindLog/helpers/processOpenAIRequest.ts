@@ -65,7 +65,7 @@ export async function sendOpenAiRequest({
     : 100
   if (recursionLevel > MAX_RECURSION) {
     await createMindLogEntry({
-      context,
+      ctx: context,
       // agentId,
       userId: aiAgentUser.id,
       type: MindLogType.Error,
@@ -197,7 +197,7 @@ export async function sendOpenAiRequest({
           toolError instanceof Error ? toolError.message : String(toolError)
 
         await createMindLogEntry({
-          context,
+          ctx: context,
           // agentId,
           userId: aiAgentUser.id,
           type: MindLogType.Error,
@@ -252,7 +252,7 @@ ${errorMessage}
 
     // Логируем ошибку
     await createMindLogEntry({
-      context,
+      ctx: context,
       // agentId,
       userId: aiAgentUser.id,
       type: MindLogType.Error,

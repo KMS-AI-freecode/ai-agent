@@ -15,6 +15,7 @@ export const createAuthTokenResolver: FieldResolver<
     type: 'Human',
     Messages: [],
     MindLogs: [],
+    Skills: [],
   }
 
   lowDb.data.users.push(user)

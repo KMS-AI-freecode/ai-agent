@@ -47,7 +47,7 @@ export async function processToolCalls({
       // finished,
       // finalResult: toolResult,
     } = await handleToolCall({
-      context,
+      ctx: context,
       user,
       toolCall,
       // messages
