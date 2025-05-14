@@ -57,6 +57,8 @@ export const processStimulus: GraphQLFieldResolver<
       Messages: [],
       MindLogs: [],
       Skills: prepareSkillsSerializer([]),
+      Knowledges: [],
+      Experiences: [],
       data: agentData,
     }
 

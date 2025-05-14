@@ -7,9 +7,10 @@ import * as os from 'os'
 import { MindLogType } from '../../interfaces'
 import { toolName } from './interfaces'
 import { ApolloContext } from '../../../../../nexus/context'
-import { LowDbUser } from '../../../../../lowdb/interfaces'
+import { LowDbKnowledge, LowDbUser } from '../../../../../lowdb/interfaces'
 import { Skill } from '../../../../context/skills'
 import { getUser } from '../../../../../lowdb/helpers'
+import { generateId } from '../../../../../utils/id'
 // import { getUser } from '../../../../../lowdb/helpers'
 
 /**
@@ -43,7 +44,7 @@ export async function handleToolCall({
 
   const localAgentUser = getUser(agent.userId, ctx)
 
-  const { Skills: skills } = localAgentUser
+  const { Skills: skills, Knowledges } = localAgentUser
 
   const { name, arguments: argsString } = toolCall.function
   const args = JSON.parse(argsString)
@@ -246,14 +247,29 @@ ${errorOutput}
           functionBody,
         ]) as Skill['fn']
 
-        // Добавляем новое знание в массив
-        skills.push({
+        const skill: Skill = {
+          id: generateId(),
+          createdAt: new Date(),
           description,
           query: regexPattern,
           fn,
-        })
+        }
+
+        // Добавляем новое знание в массив
+        skills.push(skill)
+
+        const knowledge: LowDbKnowledge = {
+          id: generateId(),
+          skillId: skill.id,
+          description: skill.description,
+          createdAt: skill.createdAt,
+          data: undefined,
+          quality: 0.5,
+        }
 
         console.log('skills', user.Skills)
+
+        Knowledges.push(knowledge)
 
         await lowDb.write()
 

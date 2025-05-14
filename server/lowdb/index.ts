@@ -71,6 +71,8 @@ export async function createLowDb() {
       Messages: [],
       MindLogs: [],
       Skills: prepareSkillsSerializer([]),
+      Knowledges: [],
+      Experiences: [],
     }
 
     const agent: LowDbAgent = {

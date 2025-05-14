@@ -43,6 +43,7 @@ export const sendMessageResolver: FieldResolver<
   // Публикуем сообщение для подписок
   ctx.pubsub.publish(PUBSUB_MESSAGE_ADDED, message)
 
+  // TODO Move to processStimulus
   const response = await processMessage({ message, ctx })
 
   let reply: LowDbMessage | undefined

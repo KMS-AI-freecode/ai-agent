@@ -3,11 +3,15 @@
 // import path from 'path'
 
 import { LowDbUser } from '../../../lowdb/interfaces'
+import { generateId } from '../../../utils/id'
 
 // Типы для знаний
 export type Skill = {
+  id: string
   description: string
   query: RegExp
+  createdAt: Date
+  // eslint-disable-next-line @typescript-eslint/ban-types
   fn: (...args: string[]) => string
 }
 
@@ -30,6 +34,7 @@ export interface SerializedSkill {
 // Функция для сериализации знаний в формат JSON
 export const serializeSkills = (skills: Skill[]): SerializedSkill[] => {
   return skills.map((skill) => ({
+    ...skill,
     description: skill.description,
     query: {
       source: skill.query.source,
@@ -53,6 +58,8 @@ export const deserializeSkills = (
 ): LowDbUser['Skills'] => {
   return prepareSkillsSerializer(
     serializedSkills.map((serialized) => ({
+      id: generateId(),
+      createdAt: new Date(),
       description: serialized.description,
       query: new RegExp(serialized.query.source, serialized.query.flags),
       fn: eval(`(${serialized.fn})`) as (...args: string[]) => string,

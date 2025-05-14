@@ -17,6 +17,8 @@ export const createAuthTokenResolver: FieldResolver<
     Messages: [],
     MindLogs: [],
     Skills: prepareSkillsSerializer([]),
+    Knowledges: [],
+    Experiences: [],
   }
 
   lowDb.data.users.push(user)

@@ -28,6 +28,48 @@ export type LowDbMessage = {
   text: string
 }
 
+/**
+ * Знание.
+ * Это может быть как статическое знание (например, какая-то справочная дата),
+ * или знание какой скилл применить надо (какую функцию)
+ */
+export type LowDbKnowledge = {
+  id: string
+  createdAt: Date
+  updatedAt?: Date
+  /**
+   * Описание знания
+   */
+  description: string
+
+  /**
+   * Непосредственно знание
+   */
+  data?: string
+  /**
+   * ID скила, если для выполнения требуется применить какой-то скилл
+   */
+  skillId?: string
+
+  /**
+   * Качество знания от 0.0 до 1.0
+   */
+  quality: number
+}
+
+/**
+ * Опыт. То есть количество применения какого-то знания.
+ */
+export type LowDbExperience = {
+  id: string
+  createdAt: Date
+  updatedAt?: Date
+  knowledgeId: string | undefined
+  skillId: string | undefined
+  error?: string
+  quality: number
+}
+
 export type LowDbUser = {
   id: string
   createdAt: Date
@@ -40,6 +82,8 @@ export type LowDbUser = {
   Skills: Skill[] & {
     toJSON: () => string
   }
+  Knowledges: LowDbKnowledge[]
+  Experiences: LowDbExperience[]
 }
 
 export type LowDbMindlog = {

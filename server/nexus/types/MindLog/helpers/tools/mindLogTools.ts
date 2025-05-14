@@ -109,7 +109,7 @@ export const mindLogTools: ChatCompletionTool[] = [
           pattern: {
             type: 'string',
             description:
-              'Регулярное выражение для распознавания запроса (строка, которая будет преобразована в RegExp через new RegExp(pattern))',
+              'Регулярное выражение для распознавания запроса (строка, которая будет преобразована в RegExp через new RegExp(pattern)). Не должен быть чувствительным к регистру и учитывать строку целиком',
           },
           functionArguments: {
             type: 'array',
