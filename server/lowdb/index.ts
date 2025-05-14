@@ -2,6 +2,12 @@ import { JSONFilePreset } from 'lowdb/node'
 import { LowDbAgent, LowDbData, LowDbUser } from './interfaces'
 import { mkdir, access } from 'fs/promises'
 import { generateId } from '../utils/id'
+import {
+  deserializeSkills,
+  prepareSkillsSerializer,
+  SerializedSkill,
+  // serializeSkills,
+} from '../nexus/context/skills'
 
 // type DbData = {
 //   posts: {
@@ -40,6 +46,22 @@ export async function createLowDb() {
     // mindLogs: [],
   })
 
+  /**
+   * Надо десериализовать все данные
+   */
+
+  /**
+   * Очень грязный хак.
+   * Сейчас нет нормального механизма обработки на запись и на чтение базы,
+   * поэтому вот так.
+   */
+  db.data.users.forEach((user) => {
+    if (typeof user.Skills === 'string') {
+      const serialized: SerializedSkill[] = JSON.parse(user.Skills)
+      user.Skills = deserializeSkills(serialized)
+    }
+  })
+
   if (!db.data.agent) {
     const agentUser: LowDbUser = {
       id: generateId(),
@@ -48,7 +70,7 @@ export async function createLowDb() {
       type: 'Agent',
       Messages: [],
       MindLogs: [],
-      Skills: [],
+      Skills: prepareSkillsSerializer([]),
     }
 
     const agent: LowDbAgent = {
@@ -61,6 +83,14 @@ export async function createLowDb() {
 
     db.data.users.push(agentUser)
   }
+
+  db.data.users.forEach((user) => {
+    // user.Skills.toJSON = function () {
+    //   return JSON.stringify(serializeSkills(this))
+    // }
+
+    user.Skills = prepareSkillsSerializer(user.Skills)
+  })
 
   // Сохранение изменений в файл
   await db.write()

@@ -2,6 +2,8 @@
 // import fs from 'fs'
 // import path from 'path'
 
+import { LowDbUser } from '../../../lowdb/interfaces'
+
 // Типы для знаний
 export type Skill = {
   description: string
@@ -10,7 +12,7 @@ export type Skill = {
 }
 
 // Интерфейс для сериализованного представления знаний
-interface SerializedSkill {
+export interface SerializedSkill {
   description: string
   query: {
     source: string
@@ -37,15 +39,25 @@ export const serializeSkills = (skills: Skill[]): SerializedSkill[] => {
   }))
 }
 
+export function prepareSkillsSerializer(skills: Skill[]): LowDbUser['Skills'] {
+  // @ts-expect-error types
+  skills.toJSON = function () {
+    return JSON.stringify(serializeSkills(this))
+  }
+  return skills as LowDbUser['Skills']
+}
+
 // Функция для десериализации знаний из JSON
 export const deserializeSkills = (
   serializedSkills: SerializedSkill[],
-): Skill[] => {
-  return serializedSkills.map((serialized) => ({
-    description: serialized.description,
-    query: new RegExp(serialized.query.source, serialized.query.flags),
-    fn: eval(`(${serialized.fn})`) as (...args: string[]) => string,
-  }))
+): LowDbUser['Skills'] => {
+  return prepareSkillsSerializer(
+    serializedSkills.map((serialized) => ({
+      description: serialized.description,
+      query: new RegExp(serialized.query.source, serialized.query.flags),
+      fn: eval(`(${serialized.fn})`) as (...args: string[]) => string,
+    })),
+  )
 }
 
 // Функция для сохранения знаний в файл

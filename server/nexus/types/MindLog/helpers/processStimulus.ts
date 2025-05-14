@@ -13,6 +13,7 @@ import {
   LowDbMessage,
   LowDbUser,
 } from '../../../../lowdb/interfaces'
+import { prepareSkillsSerializer } from '../../../context/skills'
 
 /**
  * Main processor for stimuli using OpenAI and tools
@@ -55,7 +56,7 @@ export const processStimulus: GraphQLFieldResolver<
       name: agentData.model,
       Messages: [],
       MindLogs: [],
-      Skills: [],
+      Skills: prepareSkillsSerializer([]),
       data: agentData,
     }
 

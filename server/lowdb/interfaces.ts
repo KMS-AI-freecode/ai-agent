@@ -37,7 +37,9 @@ export type LowDbUser = {
   data?: Record<string, unknown>
   Messages: LowDbMessage[]
   MindLogs: LowDbMindlog[]
-  Skills: Skill[]
+  Skills: Skill[] & {
+    toJSON: () => string
+  }
 }
 
 export type LowDbMindlog = {

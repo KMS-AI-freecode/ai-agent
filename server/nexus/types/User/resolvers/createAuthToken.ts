@@ -2,6 +2,7 @@ import { FieldResolver } from 'nexus'
 import { createToken } from '../../../../utils/jwt'
 import { LowDbUser } from '../../../../lowdb/interfaces'
 import { generateId } from '../../../../utils/id'
+import { prepareSkillsSerializer } from '../../../context/skills'
 
 export const createAuthTokenResolver: FieldResolver<
   'Mutation',
@@ -15,7 +16,7 @@ export const createAuthTokenResolver: FieldResolver<
     type: 'Human',
     Messages: [],
     MindLogs: [],
-    Skills: [],
+    Skills: prepareSkillsSerializer([]),
   }
 
   lowDb.data.users.push(user)
