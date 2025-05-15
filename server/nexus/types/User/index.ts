@@ -64,5 +64,8 @@ export const AuthTokenPayload = objectType({
   name: 'AuthTokenPayload',
   definition(t) {
     t.nonNull.string('token')
+    t.nonNull.field('User', {
+      type: 'User',
+    })
   },
 })

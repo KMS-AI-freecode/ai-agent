@@ -1,3 +1,8 @@
+query currentUser {
+  currentUser: me {
+    ...User_
+  }
+}
 
 fragment User_ on User {
   ...UserNoNested
@@ -7,4 +12,13 @@ fragment UserNoNested on User {
   id
   name
   data
+}
+
+mutation createToken {
+  createAuthToken {
+    token
+    User {
+      ...User_
+    }
+  }
 }

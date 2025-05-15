@@ -32,7 +32,7 @@ export async function createMindLogEntry({
 }: createMindLogEntryProps) {
   // const { lowDb } = context
 
-  const mindLogUser = getUser(userId, context)
+  const mindLogUser = getUser(userId, context.lowDb)
 
   quality
 

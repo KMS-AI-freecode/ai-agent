@@ -4,17 +4,22 @@ import {
   ActivityAddedDocument,
   ActivityAddedSubscription,
   MessageFragment,
+  UserFragment,
 } from '../../gql/generated'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 
 export enum AppActionType {
   AddMessage = 'AddMessage',
+  SetCurrentUser = 'SetCurrentUser',
 }
 
-type AppAction = { type: AppActionType.AddMessage; payload: MessageFragment }
+type AppAction =
+  | { type: AppActionType.AddMessage; payload: MessageFragment }
+  | { type: AppActionType.SetCurrentUser; payload: AppState['currentUser'] }
 
 type AppState = {
   messages: MessageFragment[]
+  currentUser: UserFragment | undefined
 }
 
 type AppContextValue = {
@@ -44,8 +49,9 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   return state
 }
 
-const defaultState = {
+const defaultState: AppState = {
   messages: [],
+  currentUser: undefined,
 }
 
 type AppContextProviderProps = React.PropsWithChildren<{

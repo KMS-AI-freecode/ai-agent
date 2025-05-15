@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-import { getUser } from '../../../../../../lowdb/helpers'
 import {
   LowDbExperience,
   LowDbMessage,
@@ -22,15 +21,7 @@ export async function processMessage({
     }
   | undefined
 > {
-  const { lowDb } = ctx
-
-  const { agent } = lowDb.data
-
-  if (!agent) {
-    throw new Error('Have no agent')
-  }
-
-  const agentUser = getUser(agent.userId, ctx)
+  const { lowDb, Agent: agentUser } = ctx
 
   const { Skills, Experiences, Knowledges } = agentUser
 

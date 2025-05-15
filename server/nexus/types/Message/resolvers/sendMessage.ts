@@ -6,39 +6,51 @@ import { generateId } from '../../../../utils/id'
 import { NexusGenObjects } from '../../../generated/nexus'
 import { PUBSUB_ACTIVITY_ADDED } from '../interfaces'
 import { processMessage } from './helpers/processMessage'
+import { createMindLogEntry } from '../../MindLog/helpers/createMindLog'
+import { MindLogType } from '../../MindLog/interfaces'
 
 export const sendMessageResolver: FieldResolver<
   'Mutation',
   'sendMessage'
 > = async (source, args, ctx, info) => {
   const { text } = args
-  const { lowDb } = ctx
+  const { lowDb, Agent, currentUser } = ctx
 
-  // if (!currentUser) {
-  //   throw new Error('Not authorized')
-  // }
+  await createMindLogEntry({
+    ctx,
+    userId: Agent.id,
+    type: MindLogType.Stimulus,
+    data: `Поступило новое сообщение
+      
+  \`\`\`
+  ${text}
+  \`\`\``,
+  })
 
-  const { agent } = lowDb.data
+  if (!currentUser) {
+    await createMindLogEntry({
+      ctx,
+      userId: Agent.id,
+      data: `Пользователь не авторизован, поэтому я верну ему ошибку доступа`,
+      type: 'Reaction',
+    })
 
-  if (!agent) {
-    throw new Error('Have no agent')
+    await lowDb.write()
+
+    throw new Error('Not authorized')
   }
-
-  // console.log('agent.functions', agent.functions)
-  // console.log('agent.functions[0].fn', agent.functions[0].fn)
-  // console.log('typeof agent.functions[0].fn', typeof agent.functions[0].fn)
 
   /**
    * Сохраняем сообщение в бд
    */
-
   const message: LowDbMessage = {
     id: generateId(),
     createdAt: new Date(),
     text,
+    userId: currentUser.id,
   }
 
-  // currentUser.Messages.push(message)
+  currentUser.Messages.push(message)
 
   // Публикуем сообщение для подписок
   ctx.pubsub.publish(PUBSUB_ACTIVITY_ADDED, message)
@@ -54,17 +66,23 @@ export const sendMessageResolver: FieldResolver<
       id: generateId(),
       createdAt: new Date(),
       text: response.result,
+      userId: Agent.id,
     }
   } else {
     const reply: NexusGenObjects['Message'] | null = await processStimulus(
       source,
       {
         content: message.text,
+        agent: Agent,
       },
       ctx,
       info,
     )
     console.log('sendMessageResolver reply', reply)
+  }
+
+  if (reply) {
+    Agent.Messages.push(reply)
   }
 
   await lowDb.write()

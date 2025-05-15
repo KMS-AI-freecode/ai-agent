@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import {
   ChangeEvent,
   KeyboardEvent,
@@ -18,18 +19,33 @@ import {
 } from './styles'
 
 import { ChatMessageFragment } from './Message/interfaces'
-import { useSendMessageMutation } from '../../gql/generated'
+import {
+  CurrentUserDocument,
+  useCreateTokenMutation,
+  UserFragment,
+  useSendMessageMutation,
+} from '../../gql/generated'
 
 import { SendArrowIcon, SpinnerIcon } from './icons'
+import { LOCAL_STORAGE_KEY } from '../../interfaces'
+import { useApolloClient } from '@apollo/client'
 
 type ChatMessagesProps = {
-  //
+  currentUser: UserFragment | undefined
 }
 
-export const ChatMessages: React.FC<ChatMessagesProps> = ({ ...other }) => {
+export const ChatMessages: React.FC<ChatMessagesProps> = ({
+  currentUser,
+  ...other
+}) => {
+  const client = useApolloClient()
+
   const [messages, messagesSetter] = useState<ChatMessageFragment[]>([])
 
   const [error, errorSetter] = useState<Error | null>(null)
+
+  const [createTokenMutation, { loading: createTokenMutationLoading }] =
+    useCreateTokenMutation()
 
   const handleErrorReset = useCallback(() => {
     errorSetter(null)
@@ -47,7 +63,10 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ ...other }) => {
   const [messagesContainer, messagesContainerSetter] =
     useState<HTMLDivElement | null>(null)
 
-  const [createChatMessage, { loading: inRequest }] = useSendMessageMutation({})
+  const [createChatMessage, { loading: createChatMessageLoading }] =
+    useSendMessageMutation({})
+
+  const inRequest = createChatMessageLoading || createTokenMutationLoading
 
   // const isAnonymous = !user
 
@@ -74,37 +93,65 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ ...other }) => {
   )
 
   const handleSendMessage = useCallback(() => {
-    setInputValue((text) => {
-      addMessageToOutput(text, 'user')
+    ;(async () => {
+      if (!currentUser) {
+        try {
+          const response = await createTokenMutation().then(
+            (r) => r.data?.createAuthToken,
+          )
 
-      createChatMessage({
-        variables: {
-          text,
-        },
-      })
-        .then((r) => {
-          if (r.data?.sendMessage) {
-            const message = r.data.sendMessage
+          if (response) {
+            const { token } = response
 
-            if (message.reply?.text) {
-              addMessageToOutput(message.reply.text, 'agent')
-              setInputValue('')
-            }
+            localStorage?.setItem(LOCAL_STORAGE_KEY.token, token)
+
+            client.refetchQueries({
+              include: [CurrentUserDocument],
+            })
           }
-        })
-        .catch((error) => {
-          console.error(error)
-          errorSetter(error)
-        })
+        } catch (error) {
+          const message =
+            error instanceof Error && error.message
+              ? error.message
+              : 'Can not create user'
 
-      return ''
-    })
+          errorSetter(new Error(message))
+
+          return
+        }
+      }
+
+      setInputValue((text) => {
+        addMessageToOutput(text, 'user')
+
+        createChatMessage({
+          variables: {
+            text,
+          },
+        })
+          .then((r) => {
+            if (r.data?.sendMessage) {
+              const message = r.data.sendMessage
+
+              if (message.reply?.text) {
+                addMessageToOutput(message.reply.text, 'agent')
+                setInputValue('')
+              }
+            }
+          })
+          .catch((error) => {
+            console.error(error)
+            errorSetter(error)
+          })
+
+        return ''
+      })
+    })()
   }, [addMessageToOutput, createChatMessage])
 
   const onSubmit = useCallback<React.FormEventHandler>((event) => {
     event.preventDefault()
-
-    // handleSendMessage()
+    handleSendMessage()
   }, [])
 
   const handleKeyDown = useCallback(
@@ -172,7 +219,6 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({ ...other }) => {
           disabled={inRequest}
         />
         <SendButtonStyled
-          onClick={handleSendMessage}
           disabled={!inputValue.trim() || inRequest}
           type="submit"
         >

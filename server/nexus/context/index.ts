@@ -8,6 +8,7 @@ import { openaiClient } from '../../openaiClient'
 import { Low } from 'lowdb/lib'
 import { LowDbData, LowDbUser } from '../../lowdb/interfaces'
 import { pubsub } from './PubSub'
+import { getUser } from '../../lowdb/helpers'
 // import { skills } from './skills'
 
 const APP_SECRET = process.env.APP_SECRET
@@ -30,6 +31,7 @@ export interface ApolloContext {
   // connection: { id: string } | undefined
   // worldManager: WorldManager
   lowDb: Low<LowDbData>
+  Agent: LowDbUser
 
   // Authorized user
   currentUser: LowDbUser | undefined | null
@@ -52,12 +54,21 @@ export const createContext: ContextFunction<
   ApolloContext
 > = async ({ req, lowDb }) => {
   let currentUser: ApolloContext['currentUser'] = undefined
+
+  const agent = lowDb.data.agent
+
+  if (!agent) {
+    throw new Error('Have no agent')
+  }
+
+  const Agent: ApolloContext['Agent'] = getUser(agent.userId, lowDb)
+
   /**
    * Если есть токен, пытаемся получить текущего пользователя
    */
   if (req?.headers.authorization) {
     try {
-      const token = req.headers.authorization.replace('Bearer ', '')
+      const token = req.headers.authorization
       const tokenData = jwt.verify(token, APP_SECRET)
 
       console.log('tokenData', tokenData)
@@ -80,6 +91,7 @@ export const createContext: ContextFunction<
     // connection: undefined,
     // worldManager,
     lowDb,
+    Agent,
     currentUser,
     OPENAI_API_BASE_URL,
     pubsub,

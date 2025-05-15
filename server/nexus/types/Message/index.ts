@@ -36,26 +36,8 @@ export const MessageExtendMutation = extendType({
 export const MessageResponse = objectType({
   name: 'MessageResponse',
   definition(t) {
-    // t.nonNull.list.nonNull.field('mindLogs', {
-    //   type: 'MindLog',
-    // })
     t.field('reply', {
       type: 'Message',
     })
   },
 })
-
-// export const MessageExtendsSubscription = extendType({
-//   type: 'Subscription',
-//   definition(t) {
-//     t.field<'messageAdded', NexusGenObjects['Message']>('messageAdded', {
-//       type: 'Message',
-//       subscribe(_, _args, ctx) {
-//         return ctx.pubsub.asyncIterableIterator([PUBSUB_MESSAGE_ADDED])
-//       },
-//       resolve(messageData) {
-//         return messageData
-//       },
-//     })
-//   },
-// })

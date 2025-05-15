@@ -6,6 +6,7 @@ import { processToolCalls } from './tools/processToolCalls'
 import { MindLogType } from '../interfaces'
 import { ApolloContext } from '../../../../nexus/context'
 import { LowDbAgentData, LowDbUser } from '../../../../lowdb/interfaces'
+import { generateId } from '../../../../utils/id'
 
 /**
  * Интерфейс для результата запроса к OpenAI
@@ -57,8 +58,6 @@ export async function sendOpenAiRequest({
     model,
   }
 
-  aiAgentUserData
-
   // Ограничение глубины рекурсии для безопасности
   const MAX_RECURSION = process.env.PROCESS_SMIMULUS_MAX_RECURSION
     ? parseInt(process.env.PROCESS_SMIMULUS_MAX_RECURSION)
@@ -84,7 +83,7 @@ export async function sendOpenAiRequest({
   try {
     console.log(
       `[Recursion level ${recursionLevel}] OpenAI request messages`,
-      messages,
+      // messages,
     )
 
     // Отправляем запрос к OpenAI
@@ -99,10 +98,24 @@ export async function sendOpenAiRequest({
 
     console.log(
       `[Recursion level ${recursionLevel}] OpenAI response received`,
-      completion.choices[0]?.message,
+      // completion.choices[0]?.message,
     )
 
     const responseMessage = completion.choices[0].message
+
+    // Если обычный ответ без инструментов
+    const content = responseMessage.content || ''
+
+    /**
+     * Ответ от ИИщки - это ответное сообщение
+     */
+    content &&
+      aiAgentUser.Messages.push({
+        id: generateId(),
+        createdAt: new Date(),
+        text: content,
+        userId: aiAgentUser.id,
+      })
 
     // Обрабатываем инструменты, если они есть
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
@@ -172,6 +185,14 @@ export async function sendOpenAiRequest({
         //   recursionLevel + 1, // Увеличиваем уровень рекурсии
         // )
 
+        /**
+         * Вот тут надо это будет убрать.
+         * Агент не должен сам просто так слать сообщения.
+         * Сейчас это делается, чтобы ИИ мог получить результаты выполнения своих тулзов.
+         * Но на самом деле надо дать ему тулзу, которая будет сама инициировать отправку
+         * сообщения ему. Тогда ИИ сможет сама решать когда и какие данные для чего ей нужны
+         * и надо ли ей опять чего-то отправлять или нет.
+         */
         return await sendOpenAiRequest({
           // agentId,
           aiAgentUser,
@@ -217,9 +238,6 @@ ${errorMessage}
         }
       }
     }
-
-    // Если обычный ответ без инструментов
-    const content = responseMessage.content || ''
 
     // Логируем результат
     //     await createMindLogEntry(

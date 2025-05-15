@@ -7,9 +7,12 @@ import * as os from 'os'
 import { MindLogType } from '../../interfaces'
 import { toolName } from './interfaces'
 import { ApolloContext } from '../../../../../nexus/context'
-import { LowDbKnowledge, LowDbUser } from '../../../../../lowdb/interfaces'
+import {
+  LowDbKnowledge,
+  LowDbMessage,
+  LowDbUser,
+} from '../../../../../lowdb/interfaces'
 import { Skill } from '../../../../context/skills'
-import { getUser } from '../../../../../lowdb/helpers'
 import { generateId } from '../../../../../utils/id'
 // import { getUser } from '../../../../../lowdb/helpers'
 
@@ -34,20 +37,21 @@ export async function handleToolCall({
   result: string
   // finished?: boolean
 }> {
-  const { lowDb } = ctx
-
-  const agent = lowDb.data.agent
-
-  if (!agent) {
-    throw new Error('Can not get agent')
-  }
-
-  const localAgentUser = getUser(agent.userId, ctx)
+  const { lowDb, Agent: localAgentUser } = ctx
 
   const { Skills: skills, Knowledges } = localAgentUser
 
   const { name, arguments: argsString } = toolCall.function
   const args = JSON.parse(argsString)
+
+  const message: LowDbMessage = {
+    id: generateId(),
+    text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
+    createdAt: new Date(),
+    userId: user.id,
+  }
+
+  user.Messages.push(message)
 
   // Логируем вызов инструмента с аргументами
   console.log(`Tool Call: ${name}`, args)

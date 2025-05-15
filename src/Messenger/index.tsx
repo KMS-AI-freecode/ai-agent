@@ -4,6 +4,7 @@ import React from 'react'
 import { ChatMessages } from './Messages'
 import { MessengerStyled } from './styles'
 import { useAppContext } from '../App/Context'
+import { useCurrentUserQuery } from '../gql/generated'
 // import { useActivityAddedSubscription } from '../gql/generated'
 // import { AppActionType, useAppContext } from '../App/Context'
 // import { useApolloClient } from '@apollo/client'
@@ -13,6 +14,12 @@ export const Messenger: React.FC = () => {
   const {
     state: { messages },
   } = useAppContext()
+
+  const currentUserResponse = useCurrentUserQuery()
+
+  const currentUser = currentUserResponse.data?.currentUser ?? undefined
+
+  console.log('currentUser', currentUser)
 
   console.log('messages', messages)
 
@@ -55,7 +62,7 @@ export const Messenger: React.FC = () => {
 
   return (
     <MessengerStyled>
-      <ChatMessages key="chat-content" />
+      <ChatMessages key="chat-content" currentUser={currentUser} />
     </MessengerStyled>
   )
 }

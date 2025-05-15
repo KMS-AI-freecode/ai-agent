@@ -23,16 +23,13 @@ export const processStimulus: GraphQLFieldResolver<
   ApolloContext,
   {
     content: string
+    agent: LowDbUser
   },
   Promise<NexusGenObjects['Message'] | null>
-> = async (_, data: { content: string }, context) => {
+> = async (_, data, context) => {
   const { lowDb, OPENAI_API_BASE_URL } = context
 
-  const agent = lowDb.data.agent
-
-  if (!agent) {
-    throw new Error('Can not get agent')
-  }
+  const { agent, content: text } = data
 
   // const agentId = agent.id
 
@@ -65,25 +62,23 @@ export const processStimulus: GraphQLFieldResolver<
     lowDb.data.users.push(aiAgentUser)
   }
 
-  const text = data.content
-
   const message: LowDbMessage = {
     id: generateId(),
     text,
     // userId: agent.userId,
     createdAt: new Date(),
+    userId: agent.id,
   }
 
-  await createMindLogEntry({
-    ctx: context,
-    userId: agent.userId,
-    type: MindLogType.Stimulus,
-    data: `### New stimulus
-    
-\`\`\`
-${text}
-\`\`\``,
-  })
+  /**
+   * По хорошему, тут надо бы как-то корректировать сообщение, чтобы агент
+      от своего имени обращался к агенту
+   */
+  agent.Messages.push(message)
+
+  /**
+   * Надо переделать тут все и создать отдельну. функцию формирования контекста.
+   */
 
   // Generate the complete system prompt
   const systemPrompt = getSystemPrompt()
@@ -109,7 +104,7 @@ ${text}
   // Create final entry
   await createMindLogEntry({
     ctx: context,
-    userId: agent.userId,
+    userId: agent.id,
     type: MindLogType.Result,
     data: `Final result: ${response.message}`,
     quality: 0.5,

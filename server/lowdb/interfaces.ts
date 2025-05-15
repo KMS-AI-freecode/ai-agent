@@ -26,6 +26,7 @@ export type LowDbMessage = {
   createdAt: Date
   updatedAt?: Date
   text: string
+  userId: string
 }
 
 /**
