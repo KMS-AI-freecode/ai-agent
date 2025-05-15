@@ -1,12 +1,16 @@
 subscription activityAdded {
   activityAdded {
-    __typename
-    id
-    ... on User {
-      ...UserNoNested 
-    }
-    ... on Message {
-      ...MessageNoNested
-    }
+    ...Activity_
+  }
+}
+
+fragment Activity_ on Activity {
+  __typename
+  id
+  ... on User {
+    ...UserNoNested
+  }
+  ... on Message {
+    ...MessageNoNested
   }
 }
