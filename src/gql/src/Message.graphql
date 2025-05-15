@@ -2,9 +2,17 @@
 mutation sendMessage($text: String!) {
   sendMessage(text: $text) {
     reply {
-      id
-      text
-      createdAt
+      ...Message_
     }
   }
+}
+
+fragment Message_ on Message {
+  ...MessageNoNested
+}
+
+fragment MessageNoNested on Message {
+  id
+  text
+  createdAt
 }

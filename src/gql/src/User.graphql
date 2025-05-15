@@ -1,0 +1,10 @@
+
+fragment User_ on User {
+  ...UserNoNested
+}
+
+fragment UserNoNested on User {
+  id
+  name
+  data
+}

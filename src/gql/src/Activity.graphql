@@ -1,0 +1,12 @@
+subscription activityAdded {
+  activityAdded {
+    __typename
+    id
+    ... on User {
+      ...UserNoNested 
+    }
+    ... on Message {
+      ...MessageNoNested
+    }
+  }
+}
