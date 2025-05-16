@@ -14,4 +14,5 @@ export enum toolName {
   // getMindLog = 'getMindLog',
   // updateMindLog = 'updateMindLog',
   // deleteMindLog = 'deleteMindLog',
+  sendMessage = 'sendMessage',
 }

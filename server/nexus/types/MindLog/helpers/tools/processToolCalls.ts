@@ -13,7 +13,7 @@ type processToolCallsProps = {
   context: ApolloContext
   // agentId: string
   toolCalls: ToolCall[]
-  // messages: ChatCompletionMessageParam[]
+  messages: ChatCompletionMessageParam[]
 
   /**
    * Объект пользователя, от имени которого вызывается тулза.
@@ -26,32 +26,48 @@ export async function processToolCalls({
   // agentId,
   user,
   context,
-  // messages,
+  messages,
   toolCalls,
-}: processToolCallsProps): Promise<{
-  messages: ChatCompletionMessageParam[]
-  // isFinished: boolean
-  // finalResult?: string
-}> {
+}: processToolCallsProps) {
   // let isFinished = false
   // let finalResult: string | undefined = undefined
   // const updatedMessages = [...messages]
 
-  const messages: ChatCompletionMessageParam[] = []
+  // const messages: ChatCompletionMessageParam[] = []
 
   console.log('toolCalls', toolCalls)
 
   for (const toolCall of toolCalls) {
-    const {
-      result,
-      // finished,
-      // finalResult: toolResult,
-    } = await handleToolCall({
+    await handleToolCall({
       ctx: context,
       user,
       toolCall,
       // messages
     })
+      .then((r) => {
+        messages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: r ?? '',
+        })
+      })
+      .catch((error) => {
+        console.error(error)
+
+        let errorMessage = 'Неизвестная ошибка'
+
+        if (error instanceof Error) {
+          if (error.stack) {
+            errorMessage = errorMessage + `\n\n## Stack ${error.stack}`
+          }
+        }
+
+        messages.push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: `Во время выполнения возникла ошибка: ${errorMessage}`,
+        })
+      })
 
     // Добавляем результат вызова инструмента в историю сообщений
     // updatedMessages.push({
@@ -60,11 +76,8 @@ export async function processToolCalls({
     //   content: result,
     // })
 
-    messages.push({
-      role: 'tool',
-      tool_call_id: toolCall.id,
-      content: result,
-    })
+    // if (result) {
+    // }
 
     // Если это завершение обработки, сохраняем результат
     // if (finished) {
@@ -73,10 +86,10 @@ export async function processToolCalls({
     // }
   }
 
-  return {
-    // updatedMessages,
-    messages,
-    // isFinished,
-    // finalResult,
-  }
+  // return {
+  //   // updatedMessages,
+  //   messages,
+  //   // isFinished,
+  //   // finalResult,
+  // }
 }

@@ -14,6 +14,8 @@ import {
 } from '../../../../../lowdb/interfaces'
 import { Skill } from '../../../../context/skills'
 import { generateId } from '../../../../../utils/id'
+import { getUser } from '../../../../../lowdb/helpers'
+import { sendMessage } from '../../../Message/resolvers/helpers/sendMessage'
 // import { getUser } from '../../../../../lowdb/helpers'
 
 /**
@@ -33,10 +35,7 @@ export async function handleToolCall({
   user,
   ctx,
   toolCall,
-}: handleToolCallProps): Promise<{
-  result: string
-  // finished?: boolean
-}> {
+}: handleToolCallProps): Promise<string | undefined> {
   const { lowDb, Agent: localAgentUser } = ctx
 
   const { Skills: skills, Knowledges } = localAgentUser
@@ -74,7 +73,7 @@ export async function handleToolCall({
         data,
         quality,
       })
-      return { result: `Создана запись с id "${entry.id}"` }
+      return `Создана запись с id "${entry.id}"`
     }
 
     // case toolName.finishProcessing: {
@@ -127,7 +126,7 @@ ${JSON.stringify(config, null, 2)}
       //   quality: 0.7,
       // })
 
-      return { result }
+      return result
     }
 
     case toolName.execCommand: {
@@ -169,7 +168,7 @@ ${JSON.stringify(config, null, 2)}
         //   quality: 0.8,
         // })
 
-        return { result: output }
+        return output
       } catch (error) {
         const errorOutput = String(error)
 
@@ -185,7 +184,7 @@ ${errorOutput}
           quality: 0.3,
         })
 
-        return { result: `Возникла ошибка: ${errorOutput}` }
+        return `Возникла ошибка: ${errorOutput}`
       }
     }
 
@@ -199,9 +198,7 @@ ${errorOutput}
         functionBody: skill.fn.toString(),
       }))
 
-      return {
-        result: JSON.stringify(skillList, null, 2),
-      }
+      return JSON.stringify(skillList, null, 2)
     }
 
     // case toolName.getSkill: {
@@ -277,9 +274,7 @@ ${errorOutput}
 
         await lowDb.write()
 
-        return {
-          result: `Знание успешно добавлено. Текущий индекс: ${skills.length - 1}`,
-        }
+        return `Знание успешно добавлено. ID: ${knowledge.id}`
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
@@ -295,9 +290,7 @@ ${errorMessage}
           quality: 0.3,
         })
 
-        return {
-          result: `Ошибка при добавлении знания: ${errorMessage}`,
-        }
+        return `Ошибка при добавлении знания: ${errorMessage}`
       }
     }
 
@@ -570,13 +563,39 @@ ${errorMessage}
     //       }
     //     }
 
+    case toolName.sendMessage: {
+      const {
+        userId,
+        messageText,
+      }: {
+        userId: string
+        messageText: string
+      } = args
+
+      // Получаем пользователя
+      const targetUser = getUser(userId, ctx.lowDb)
+
+      // if (!targetUser) {
+      //   return {
+      //     result: `Пользователь с ID ${userId} не найден`,
+      //   }
+      // }
+
+      return await sendMessage({
+        args: {
+          text: messageText,
+          fromUser: user,
+          toUser: targetUser,
+        },
+        ctx,
+      }).then((r) => r?.text)
+    }
+
     default:
       if (Object.values<string>(MindLogType).includes(name)) {
-        return {
-          result: `Ошибка вызова несуществующего тулза ${name}. Если вы хотели записать MindLog, то следует вызывать тулзу ${toolName.createMindLogEntry}`,
-        }
+        return `Ошибка вызова несуществующего тулза ${name}. Если вы хотели записать MindLog, то следует вызывать тулзу ${toolName.createMindLogEntry}`
       }
 
-      return { result: `Неизвестный инструмент: ${name}` }
+      return `Неизвестный инструмент: ${name}`
   }
 }

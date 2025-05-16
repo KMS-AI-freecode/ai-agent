@@ -289,4 +289,59 @@ export const mindLogTools: ChatCompletionTool[] = [
   //     },
   //   },
   // },
+  {
+    type: 'function',
+    function: {
+      name: toolName.sendMessage,
+      description:
+        'Отправить сообщение пользователю. Может быть использован в том числе для запроса отправики сообщения себе же, к примеру, чтобы получить результаты выполнения телзов. А можно попросить переслать какому-то пользователь результат',
+      parameters: {
+        type: 'object',
+        properties: {
+          userId: {
+            type: 'string',
+            description: 'ID пользователя',
+          },
+          messageText: {
+            type: 'string',
+            description: 'Текст сообщения',
+          },
+          // availableTools: {
+          //   type: 'array',
+          //   description: 'Массив доступных инструментов, которые можно использовать в сообщении',
+          //   items: {
+          //     type: 'object',
+          //     properties: {
+          //       type: {
+          //         type: 'string',
+          //         enum: ['function']
+          //       },
+          //       function: {
+          //         type: 'object',
+          //         properties: {
+          //           name: {
+          //             type: 'string',
+          //             enum: Object.values(toolName)
+          //           },
+          //           description: {
+          //             type: 'string'
+          //           },
+          //           parameters: {
+          //             type: 'object'
+          //           }
+          //         },
+          //         required: ['name', 'description', 'parameters']
+          //       }
+          //     },
+          //     required: ['type', 'function']
+          //   }
+          // },
+        },
+        /**
+         * Пока делаю только текстовое сообщение, но потом доделаю возможность передачи тулзов
+         */
+        required: ['userId', 'messageText'],
+      },
+    },
+  },
 ]

@@ -2,59 +2,41 @@
 import {
   LowDbExperience,
   LowDbMessage,
+  LowDbUser,
 } from '../../../../../../lowdb/interfaces'
 import { generateId } from '../../../../../../utils/id'
 import { ApolloContext } from '../../../../../context'
 import { Skill } from '../../../../../context/skills'
 
 type processMessageProps = {
+  user: LowDbUser
   message: LowDbMessage
   ctx: ApolloContext
 }
 
-export async function processMessage({
-  ctx,
+/**
+ * Попытка применения скилов к обрабатываемому сообщению.
+ * Сейчас это реализуемо пока только к самому агенту приложения,
+ * но в дальнейшем такую логику надо расширить для любого пользователя в системе,
+ * так как у любого пользователя могут быть накоплены свои знания и скилы.
+ */
+export async function processMessageBySkills({
+  user,
   message,
+  ctx,
 }: processMessageProps): Promise<
   | {
       result: string
     }
   | undefined
 > {
-  const { lowDb, Agent: agentUser } = ctx
+  const { lowDb } = ctx
 
-  const { Skills, Experiences, Knowledges } = agentUser
+  const { Skills, Experiences, Knowledges } = user
 
   console.log('processMessage message', message)
 
-  let result: string | undefined
-
-  // for (const processor of Skills) {
-  //   const match = message.text.match(processor.query)
-
-  //   if (match) {
-  //     console.log('processMessage match array', Array.from(match))
-  //     console.log('processMessage match.slice(1)', match.slice(1))
-
-  //     // console.log('processMessage match values', [...match.entries()])
-  //     console.log('processMessage match values', match)
-
-  //     result = processor.fn.apply(null, match.slice(1))
-
-  //     console.log('processMessage result', result)
-
-  //     break
-  //   }
-  // }
-
-  /**
-   * Находим все подходящие скиды
-   */
-  // const possibleSkills = Skills.filter((n) => {
-  //   return message.text.match(n.query)
-  // }).map((n) => {
-  //   return { skill: n, Experiences: Experiences.filter((i) => i.skillId) }
-  // })
+  let result: string | undefined = undefined
 
   const possibleSkills: {
     skill: Skill
@@ -92,8 +74,6 @@ export async function processMessage({
   const usedSkill = possibleSkills.at(0)
 
   if (usedSkill) {
-    // usedSkill.skill.result = usedSkill?.skill.fn.apply(null, match.slice(1))
-
     const knowledge = Knowledges.find((n) => n.skillId === usedSkill.skill.id)
 
     const experience: LowDbExperience = {
@@ -122,47 +102,11 @@ export async function processMessage({
     if (process.env.NODE_ENV === 'development') {
       await lowDb.write()
     }
+
+    return {
+      result,
+    }
   }
 
-  // for (const processor of Skills) {
-  //   const match = message.text.match(processor.query)
-
-  //   if (match) {
-  //     console.log('processMessage match array', Array.from(match))
-  //     console.log('processMessage match.slice(1)', match.slice(1))
-
-  //     // console.log('processMessage match values', [...match.entries()])
-  //     console.log('processMessage match values', match)
-
-  //     result = processor.fn.apply(null, match.slice(1))
-
-  //     console.log('processMessage result', result)
-
-  //     break
-  //   }
-  // }
-
-  // for (const processor of Skills) {
-  //   const match = message.text.match(processor.query)
-
-  //   if (match) {
-  //     console.log('processMessage match array', Array.from(match))
-  //     console.log('processMessage match.slice(1)', match.slice(1))
-
-  //     // console.log('processMessage match values', [...match.entries()])
-  //     console.log('processMessage match values', match)
-
-  //     result = processor.fn.apply(null, match.slice(1))
-
-  //     console.log('processMessage result', result)
-
-  //     break
-  //   }
-  // }
-
-  return result !== undefined
-    ? {
-        result,
-      }
-    : undefined
+  return
 }

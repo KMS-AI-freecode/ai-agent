@@ -13,7 +13,7 @@ import { generateId } from '../../../../utils/id'
  */
 export interface OpenAIRequestResponse {
   message: string
-  final: boolean
+  // final: boolean
   quality: number
   history?: ChatCompletionMessageParam[] // Добавляем историю для отладки
 }
@@ -24,13 +24,16 @@ type sendOpenAiRequestProps = {
   // message: string,
   // systemPrompt: string
   // existingMessages?: ChatCompletionMessageParam[],
-  recursionLevel: number
+  // recursionLevel: number
   messages: ChatCompletionMessageParam[]
+
+  fromUser: LowDbUser
+  toUser: LowDbUser
 
   /**
    * Локальная запись пользователя ии-агента
    */
-  aiAgentUser: LowDbUser
+  // aiAgentUser: LowDbUser
 }
 
 export async function sendOpenAiRequest({
@@ -39,11 +42,12 @@ export async function sendOpenAiRequest({
   // message: string,
   // systemPrompt,
   // existingMessages?: ChatCompletionMessageParam[],
-  recursionLevel,
+  // recursionLevel,
+  fromUser,
+  toUser,
   messages,
-  aiAgentUser,
-}: sendOpenAiRequestProps): Promise<OpenAIRequestResponse> {
-  const { endpoint, model } = aiAgentUser.data ?? {}
+}: sendOpenAiRequestProps): Promise<string | undefined> {
+  const { endpoint, model } = toUser.data ?? {}
 
   if (!(typeof endpoint === 'string') || !endpoint) {
     throw new Error('endpoint is empty')
@@ -59,66 +63,60 @@ export async function sendOpenAiRequest({
   }
 
   // Ограничение глубины рекурсии для безопасности
-  const MAX_RECURSION = process.env.PROCESS_SMIMULUS_MAX_RECURSION
-    ? parseInt(process.env.PROCESS_SMIMULUS_MAX_RECURSION)
-    : 100
-  if (recursionLevel > MAX_RECURSION) {
-    await createMindLogEntry({
-      ctx: context,
-      // agentId,
-      userId: aiAgentUser.id,
-      type: MindLogType.Error,
-      data: `## Внимание
-        
-Превышена максимальная глубина рекурсии (${MAX_RECURSION}), принудительное завершение`,
-      quality: 0.1,
-    })
-    return {
-      message: `Превышена максимальная глубина рекурсии (${MAX_RECURSION})`,
-      final: true,
-      quality: 0.3,
-    }
-  }
+  // const MAX_RECURSION = process.env.PROCESS_SMIMULUS_MAX_RECURSION
+  //   ? parseInt(process.env.PROCESS_SMIMULUS_MAX_RECURSION)
+  //   : 100
+  //   if (recursionLevel > MAX_RECURSION) {
+  //     await createMindLogEntry({
+  //       ctx: context,
+  //       // agentId,
+  //       userId: aiAgentUser.id,
+  //       type: MindLogType.Error,
+  //       data: `## Внимание
+
+  // Превышена максимальная глубина рекурсии (${MAX_RECURSION}), принудительное завершение`,
+  //       quality: 0.1,
+  //     })
+  //     return {
+  //       message: `Превышена максимальная глубина рекурсии (${MAX_RECURSION})`,
+  //       final: true,
+  //       quality: 0.3,
+  //     }
+  //   }
 
   try {
-    console.log(
-      `[Recursion level ${recursionLevel}] OpenAI request messages`,
-      // messages,
-    )
+    // console.log(
+    //   `[Recursion level ${recursionLevel}] OpenAI request messages`,
+    //   // messages,
+    // )
 
     // Отправляем запрос к OpenAI
     const completion = await context.openai.chat.completions.create({
       model: aiAgentUserData.model,
       messages,
       tools: mindLogTools,
+      /**
+       * Требует
+       */
       tool_choice: 'auto',
-      temperature: 0.7,
+      temperature: 0.5,
       parallel_tool_calls: false,
     })
 
     console.log(
-      `[Recursion level ${recursionLevel}] OpenAI response received`,
-      // completion.choices[0]?.message,
+      `[Recursion OpenAI response received`,
+      completion.choices[0]?.message,
     )
 
     const responseMessage = completion.choices[0].message
 
-    // Если обычный ответ без инструментов
-    const content = responseMessage.content || ''
-
-    /**
-     * Ответ от ИИщки - это ответное сообщение
-     */
-    content &&
-      aiAgentUser.Messages.push({
-        id: generateId(),
-        createdAt: new Date(),
-        text: content,
-        userId: aiAgentUser.id,
-      })
-
     // Обрабатываем инструменты, если они есть
     if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
+      /**
+       * Перед вызовом тулзов надо добавить ответ ИИхи в историю сообщений
+       */
+      messages.push(responseMessage)
+
       // Логируем вызов инструментов
       //       await createMindLogEntry(
       //         context,
@@ -137,106 +135,89 @@ export async function sendOpenAiRequest({
       // Добавляем сообщение от модели в историю сообщений
       // const updatedMessages = [...messages, responseMessage]
 
-      try {
-        // Обрабатываем инструменты с ожиданием результата
-        const toolCallsResult = await processToolCalls({
-          context,
-          user: aiAgentUser,
-          toolCalls: responseMessage.tool_calls,
-          // messages: updatedMessages,
-        })
+      // Обрабатываем инструменты с ожиданием результата
+      // const toolCallsResult = await processToolCalls({
 
-        console.log(
-          `[Recursion level ${recursionLevel}] Tool calls processing complete:`,
-          toolCallsResult,
-        )
+      // TODO Возможно тут вообзе надо убрать await,
+      // так как вероятнее всего выполнение будет последовательное
+      await processToolCalls({
+        context,
+        user: toUser,
+        toolCalls: responseMessage.tool_calls,
+        // messages: updatedMessages,
+        messages,
+      })
 
-        // Если обработка инструментов завершена и есть финальный результат
-        // if (
-        //   toolCallsResult.isFinished
-        //   // && toolCallsResult.finalResult
-        // ) {
-        //   // Создаем суммирующий лог, если это корневой уровень рекурсии
-        //   // if (recursionLevel === 0) {
-        //   //   // Запускаем асинхронно, чтобы не блокировать основной поток
-        //   //   createSummaryLog(context, agentId, message, toolCallsResult.updatedMessages)
-        //   //     .catch(err => console.error('Error in summary creation:', err))
-        //   // }
+      return sendOpenAiRequest({
+        messages,
+        context,
+        toUser,
+        fromUser,
+      })
 
-        //   return {
-        //     message: toolCallsResult.finalResult || '',
-        //     final: true,
-        //     quality: 0.8,
-        //     history: toolCallsResult.updatedMessages,
-        //   }
-        // }
+      // console.log(
+      //   `[Recursion level ${recursionLevel}] Tool calls processing complete:`,
+      //   toolCallsResult,
+      // )
 
-        // Продолжаем цикл рекурсивно, передавая обновленные сообщения
-        console.log(
-          `[Recursion level ${recursionLevel}] Continue recursion with updated messages...`,
-        )
+      // Если обработка инструментов завершена и есть финальный результат
+      // if (
+      //   toolCallsResult.isFinished
+      //   // && toolCallsResult.finalResult
+      // ) {
+      //   // Создаем суммирующий лог, если это корневой уровень рекурсии
+      //   // if (recursionLevel === 0) {
+      //   //   // Запускаем асинхронно, чтобы не блокировать основной поток
+      //   //   createSummaryLog(context, agentId, message, toolCallsResult.updatedMessages)
+      //   //     .catch(err => console.error('Error in summary creation:', err))
+      //   // }
 
-        // return await sendOpenAiRequest(
-        //   context,
-        //   agentId,
-        //   '', // message, // Исходное сообщение остаётся тем же
-        //   systemPrompt, // Системный промпт тоже не меняется
-        //   toolCallsResult.updatedMessages, // Передаём обновлённую историю
-        //   recursionLevel + 1, // Увеличиваем уровень рекурсии
-        // )
+      //   return {
+      //     message: toolCallsResult.finalResult || '',
+      //     final: true,
+      //     quality: 0.8,
+      //     history: toolCallsResult.updatedMessages,
+      //   }
+      // }
 
-        /**
-         * Вот тут надо это будет убрать.
-         * Агент не должен сам просто так слать сообщения.
-         * Сейчас это делается, чтобы ИИ мог получить результаты выполнения своих тулзов.
-         * Но на самом деле надо дать ему тулзу, которая будет сама инициировать отправку
-         * сообщения ему. Тогда ИИ сможет сама решать когда и какие данные для чего ей нужны
-         * и надо ли ей опять чего-то отправлять или нет.
-         */
-        return await sendOpenAiRequest({
-          // agentId,
-          aiAgentUser,
-          context,
-          messages: [
-            ...messages,
+      // Продолжаем цикл рекурсивно, передавая обновленные сообщения
+      // console.log(
+      //   `[Recursion level ${recursionLevel}] Continue recursion with updated messages...`,
+      // )
 
-            /**
-             * Это сообщение обязательно, чтобы ИИ видел, какие тулзы он отправил на выполнение
-             */
-            responseMessage,
+      // return await sendOpenAiRequest(
+      //   context,
+      //   agentId,
+      //   '', // message, // Исходное сообщение остаётся тем же
+      //   systemPrompt, // Системный промпт тоже не меняется
+      //   toolCallsResult.updatedMessages, // Передаём обновлённую историю
+      //   recursionLevel + 1, // Увеличиваем уровень рекурсии
+      // )
 
-            ...toolCallsResult.messages,
-          ],
-          recursionLevel: recursionLevel + 1, // Увеличиваем уровень рекурсии
-        })
-      } catch (toolError) {
-        console.error(
-          `[Recursion level ${recursionLevel}] Error processing tool calls:`,
-          toolError,
-        )
-        const errorMessage =
-          toolError instanceof Error ? toolError.message : String(toolError)
+      /**
+       * Вот тут надо это будет убрать.
+       * Агент не должен сам просто так слать сообщения.
+       * Сейчас это делается, чтобы ИИ мог получить результаты выполнения своих тулзов.
+       * Но на самом деле надо дать ему тулзу, которая будет сама инициировать отправку
+       * сообщения ему. Тогда ИИ сможет сама решать когда и какие данные для чего ей нужны
+       * и надо ли ей опять чего-то отправлять или нет.
+       */
+      // return await sendOpenAiRequest({
+      //   // agentId,
+      //   aiAgentUser,
+      //   context,
+      //   messages: [
+      //     ...messages,
 
-        await createMindLogEntry({
-          ctx: context,
-          // agentId,
-          userId: aiAgentUser.id,
-          type: MindLogType.Error,
-          data: `### Ошибка обработки инструментов
-          
-\`\`\`
-${errorMessage}
-\`\`\``,
-          quality: 0.2,
-        })
+      //     /**
+      //      * Это сообщение обязательно, чтобы ИИ видел, какие тулзы он отправил на выполнение
+      //      */
+      //     responseMessage,
 
-        return {
-          message: `Произошла ошибка при обработке инструментов: ${errorMessage}`,
-          final: true,
-          quality: 0.3,
-          history: messages,
-        }
-      }
+      //     ...toolCallsResult.messages,
+      //   ],
+      //   recursionLevel: recursionLevel + 1, // Увеличиваем уровень рекурсии
+      // })
     }
 
     // Логируем результат
@@ -259,12 +240,21 @@ ${errorMessage}
     //   ]).catch(err => console.error('Error in summary creation:', err))
     // }
 
-    return {
-      message: content,
-      final: true,
-      quality: 0.8,
-      history: [...messages, responseMessage],
-    }
+    // Если обычный ответ без инструментов
+    const content = responseMessage.content || ''
+
+    /**
+     * Ответ от ИИщки - это ответное сообщение
+     */
+    content &&
+      toUser.Messages.push({
+        id: generateId(),
+        createdAt: new Date(),
+        text: content,
+        userId: toUser.id,
+      })
+
+    return content
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
 
@@ -272,7 +262,7 @@ ${errorMessage}
     await createMindLogEntry({
       ctx: context,
       // agentId,
-      userId: aiAgentUser.id,
+      userId: toUser.id,
       type: MindLogType.Error,
       data: `### Ошибка запроса к OpenAI
       
@@ -282,11 +272,6 @@ ${errorMessage}
       quality: 0.1,
     })
 
-    return {
-      message: `Произошла ошибка при обработке: ${errorMessage}`,
-      final: true,
-      quality: 0.1,
-      history: messages,
-    }
+    return `Произошла ошибка при обработке: ${errorMessage}`
   }
 }
