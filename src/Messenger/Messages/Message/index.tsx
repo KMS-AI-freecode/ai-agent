@@ -6,32 +6,46 @@ import {
   MessageDateStyled,
   VideoContainerStyled,
 } from './styles'
-import { ChatMessageFragment } from './interfaces'
+import { MessageFragment, useUserQuery } from '../../../gql/generated'
+import { AppContextValue } from '../../../App/Context'
+import { formatDate } from '../../../helpers/format'
 
 type ChatMessageProps = {
-  message: ChatMessageFragment
+  message: MessageFragment
+  currentUser: AppContextValue['currentUser']
 }
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
+  currentUser,
   ...other
 }) => {
-  const isUser = message.creator === 'user'
+  const isUser = message.userId === currentUser?.id
 
-  // Format the date
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date)
-  }
+  const userResponse = useUserQuery({
+    variables: {
+      id: message.userId,
+    },
+    skip: !message.userId,
+  })
+
+  const user = userResponse.data?.user
 
   return (
     <ChatMessageStyled isUser={isUser} {...other}>
       <ChatMessageContentStyled>
+        {/* Имя автора сообщения */}
+        <div
+          style={{
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            color: isUser ? '#fff' : '#444',
+            marginBottom: '5px',
+          }}
+        >
+          {user?.name || `Пользователь ${message.userId?.substring(0, 6)}...`}
+        </div>
+
         <ReactMarkdown
           rehypePlugins={[rehypeRaw]}
           components={{
@@ -50,10 +64,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             ),
           }}
         >
-          {message.contentText}
+          {message.text}
         </ReactMarkdown>
 
         <MessageDateStyled isUser={isUser}>
+          {user?.type && (
+            <span style={{ marginRight: '5px' }}>[{user.type}]</span>
+          )}
           {message.createdAt && formatDate(message.createdAt)}
         </MessageDateStyled>
       </ChatMessageContentStyled>

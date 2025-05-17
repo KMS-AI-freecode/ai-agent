@@ -12,6 +12,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { createClient } from 'graphql-ws'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { LOCAL_STORAGE_KEY } from '../../interfaces'
+import { typePolicies } from './typePolicies'
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | undefined
 
@@ -73,7 +74,9 @@ function createApolloClient() {
     ssrMode: typeof window === 'undefined',
     // Объединяем authLink с остальными линками
     link: authLink.concat(splitLink),
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({
+      typePolicies,
+    }),
   })
 }
 

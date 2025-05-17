@@ -17,7 +17,7 @@ import {
   ErrorMessageStyled,
 } from './styles'
 
-import { ChatMessageFragment } from './Message/interfaces'
+// import { ChatMessageFragment } from './Message/interfaces'
 import {
   CurrentUserDocument,
   useCreateTokenMutation,
@@ -28,18 +28,23 @@ import {
 import { SendArrowIcon, SpinnerIcon } from './icons'
 import { LOCAL_STORAGE_KEY } from '../../interfaces'
 import { useApolloClient } from '@apollo/client'
+import { AppActionType, AppState, useAppContext } from '../../App/Context'
 
 type ChatMessagesProps = {
   currentUser: UserFragment | undefined
+  messages: AppState['messages']
 }
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({
   currentUser,
+  messages,
   ...other
 }) => {
   const client = useApolloClient()
 
-  const [messages, messagesSetter] = useState<ChatMessageFragment[]>([])
+  const { dispatch } = useAppContext()
+
+  // const [messages, messagesSetter] = useState<ChatMessageFragment[]>([])
 
   const [error, errorSetter] = useState<Error | null>(null)
 
@@ -77,19 +82,19 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   //   errorSetter(new Error('MAIN_AI_AGENT_USERNAME is empty'))
   // }
 
-  const addMessageToOutput = useCallback(
-    (text: string, creator: ChatMessageFragment['creator']) => {
-      messagesSetter((messages) => [
-        ...messages,
-        {
-          contentText: text,
-          creator,
-          createdAt: new Date(),
-        },
-      ])
-    },
-    [],
-  )
+  // const addMessageToOutput = useCallback(
+  //   (text: string, creator: ChatMessageFragment['creator']) => {
+  //     messagesSetter((messages) => [
+  //       ...messages,
+  //       {
+  //         contentText: text,
+  //         creator,
+  //         createdAt: new Date(),
+  //       },
+  //     ])
+  //   },
+  //   [],
+  // )
 
   const handleSendMessage = useCallback(() => {
     ;(async () => {
@@ -121,7 +126,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       }
 
       setInputValue((text) => {
-        addMessageToOutput(text, 'user')
+        // addMessageToOutput(text, 'user')
 
         createChatMessage({
           variables: {
@@ -132,9 +137,15 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             if (r.data?.sendMessage) {
               const message = r.data.sendMessage
 
+              setInputValue('')
+
               if (message.reply?.text) {
-                addMessageToOutput(message.reply.text, 'agent')
-                setInputValue('')
+                // addMessageToOutput(message.reply.text, 'agent')
+
+                dispatch({
+                  type: AppActionType.AddMessage,
+                  payload: message.reply,
+                })
               }
             }
           })
@@ -146,13 +157,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         return ''
       })
     })()
-  }, [
-    addMessageToOutput,
-    client,
-    createChatMessage,
-    createTokenMutation,
-    currentUser,
-  ])
+  }, [client, createChatMessage, createTokenMutation, currentUser, dispatch])
 
   const onSubmit = useCallback<React.FormEventHandler>(
     (event) => {
@@ -202,7 +207,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     <ChatMessagesStyled {...other}>
       <ChatMessagesListStyled ref={messagesContainerSetter}>
         {messages.map((n, index) => (
-          <ChatMessage key={index} message={n} />
+          <ChatMessage key={index} message={n} currentUser={currentUser} />
         ))}
       </ChatMessagesListStyled>
 

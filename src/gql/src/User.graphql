@@ -4,6 +4,12 @@ query currentUser {
   }
 }
 
+query user($id: String!) {
+  user(id: $id) {
+    ...User_
+  }
+}
+
 fragment User_ on User {
   ...UserNoNested
 }
@@ -11,6 +17,7 @@ fragment User_ on User {
 fragment UserNoNested on User {
   id
   name
+  type
   data
 }
 

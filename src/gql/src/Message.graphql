@@ -15,4 +15,6 @@ fragment MessageNoNested on Message {
   id
   text
   createdAt
+  userId
+  toUserId
 }

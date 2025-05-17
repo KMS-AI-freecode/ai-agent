@@ -13,6 +13,8 @@ export const Message = objectType({
     t.nonNull.string('text')
     t.nonNull.date('createdAt')
     t.date('updatedAt')
+    t.nonNull.string('userId')
+    t.string('toUserId')
   },
 })
 

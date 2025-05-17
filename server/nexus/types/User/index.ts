@@ -1,6 +1,7 @@
-import { enumType, extendType, objectType } from 'nexus'
+import { enumType, extendType, nonNull, objectType } from 'nexus'
 import { createAuthTokenResolver } from './resolvers/createAuthToken'
 import { getUsersResolver } from './resolvers/getUsers'
+import { getUserResolver } from './resolvers/getUser'
 
 export const User = objectType({
   name: 'User',
@@ -34,6 +35,14 @@ export const UserQuery = extendType({
       resolve(_, _args, ctx) {
         return ctx.currentUser ?? null
       },
+    })
+
+    t.field('user', {
+      type: 'User',
+      args: {
+        id: nonNull('String'),
+      },
+      resolve: getUserResolver,
     })
 
     t.nonNull.list.nonNull.field('users', {

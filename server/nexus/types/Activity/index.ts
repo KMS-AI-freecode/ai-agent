@@ -42,7 +42,7 @@ export const Activity = interfaceType({
 export const ActivityExtendsQuery = extendType({
   type: 'Query',
   definition(t) {
-    t.nonNull.list.nonNull.field('acivities', {
+    t.nonNull.list.nonNull.field('activities', {
       type: 'Activity',
       resolve: async (_, _args, ctx) => {
         const {

@@ -4,27 +4,27 @@ import {
   ActivityAddedDocument,
   ActivityAddedSubscription,
   MessageFragment,
+  useCurrentUserQuery,
   UserFragment,
 } from '../../gql/generated'
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client'
 
 export enum AppActionType {
   AddMessage = 'AddMessage',
-  SetCurrentUser = 'SetCurrentUser',
+  // SetCurrentUser = 'SetCurrentUser',
 }
 
-type AppAction =
-  | { type: AppActionType.AddMessage; payload: MessageFragment }
-  | { type: AppActionType.SetCurrentUser; payload: AppState['currentUser'] }
+type AppAction = { type: AppActionType.AddMessage; payload: MessageFragment }
+// | { type: AppActionType.SetCurrentUser; payload: AppState['currentUser'] }
 
-type AppState = {
+export type AppState = {
   messages: MessageFragment[]
-  currentUser: UserFragment | undefined
 }
 
-type AppContextValue = {
+export type AppContextValue = {
   state: AppState
   dispatch: React.Dispatch<AppAction>
+  currentUser: UserFragment | undefined
 }
 
 const AppContext = React.createContext<AppContextValue | undefined>(undefined)
@@ -38,7 +38,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         if (!state.messages.find((n) => n.id === message.id)) {
           state = {
             ...state,
-            messages: [...state.messages, message],
+            messages: [
+              ...state.messages,
+              {
+                ...message,
+                createdAt: new Date(message.createdAt),
+              },
+            ],
           }
         }
       }
@@ -51,7 +57,7 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 
 const defaultState: AppState = {
   messages: [],
-  currentUser: undefined,
+  // currentUser: undefined,
 }
 
 type AppContextProviderProps = React.PropsWithChildren<{
@@ -66,7 +72,15 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({
 
   // const client = useApolloClient()
 
+  const currentUserResponse = useCurrentUserQuery()
+
+  const currentUser = currentUserResponse.data?.currentUser ?? undefined
+
   useEffect(() => {
+    if (!currentUser) {
+      return
+    }
+
     const observable = client.subscribe<ActivityAddedSubscription>({
       query: ActivityAddedDocument,
     })
@@ -102,14 +116,15 @@ export const AppContextProvider: React.FC<AppContextProviderProps> = ({
     return () => {
       subscription.unsubscribe()
     }
-  }, [client])
+  }, [client, currentUser])
 
-  const contextValue = useMemo(() => {
+  const contextValue = useMemo<AppContextValue>(() => {
     return {
       state,
       dispatch,
+      currentUser,
     }
-  }, [state])
+  }, [state, currentUser])
 
   return (
     <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
