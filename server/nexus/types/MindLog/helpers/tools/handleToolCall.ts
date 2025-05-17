@@ -188,41 +188,136 @@ ${errorOutput}
       }
     }
 
-    // Инструменты для работы со знаниями
-    case toolName.getAllSkills: {
-      // Формируем список знаний в удобном для вывода формате
-      const skillList = skills.map((skill, index) => ({
-        index,
-        description: skill.description,
-        pattern: skill.query.toString(),
-        functionBody: skill.fn.toString(),
-      }))
+    case toolName.getKnowledges: {
+      const { ids, skillId } = args as {
+        ids?: string[]
+        skillId?: string
+      }
 
-      return JSON.stringify(skillList, null, 2)
+      try {
+        // Фильтрация по skillId, если указан
+        let filteredKnowledges = [...Knowledges]
+
+        if (skillId) {
+          filteredKnowledges = filteredKnowledges.filter(
+            (knowledge) => knowledge.skillId === skillId,
+          )
+        }
+
+        // Фильтрация по IDs, если указаны
+        if (ids?.length) {
+          filteredKnowledges = filteredKnowledges.filter((knowledge) =>
+            ids.includes(knowledge.id),
+          )
+        }
+
+        if (!filteredKnowledges.length) {
+          return 'Не найдено ни одного знания по указанным критериям'
+        }
+
+        let result = `Найдено ${filteredKnowledges.length} знаний`
+
+        result += '\n\n' + JSON.stringify(filteredKnowledges, null, 2)
+
+        return result
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        return JSON.stringify({ error: errorMessage }, null, 2)
+      }
     }
 
-    // case toolName.getSkill: {
-    //   const { index } = args
+    case toolName.getSkills: {
+      const { ids } = args as {
+        ids?: string[]
+      }
 
-    //   if (index < 0 || index >= skills.length) {
-    //     return {
-    //       result: `Ошибка: Знание с индексом ${index} не найдено`,
-    //     }
-    //   }
+      try {
+        // Если ids не указаны, возвращаем все умения
+        const filteredSkills = ids?.length
+          ? skills.filter((skill) => ids.includes(skill.id))
+          : skills
 
-    //   // Получаем знание по индексу и форматируем его для вывода
-    //   const skill = skills[index]
-    //   const skillInfo = {
-    //     index,
-    //     description: skill.description,
-    //     pattern: skill.query.toString(),
-    //     functionBody: skill.fn.toString(),
-    //   }
+        if (!filteredSkills.length) {
+          return 'Не найдено ни одного умения'
+        }
 
-    //   return {
-    //     result: JSON.stringify(skillInfo, null, 2),
-    //   }
-    // }
+        // else
+
+        let result = `Найдено ${filteredSkills.length} умений`
+
+        result += `\n\n ${JSON.stringify(filteredSkills, null, 2)}`
+
+        return result
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        return JSON.stringify({ error: errorMessage }, null, 2)
+      }
+    }
+
+    case toolName.addKnowledge: {
+      const {
+        description,
+        data,
+        skillId,
+        quality = 0.5,
+      }: {
+        description: string
+        data: string
+        skillId?: string
+        quality?: number
+      } = args
+
+      try {
+        // Проверка существования skillId, если он указан
+        if (skillId && !skills.find((skill) => skill.id === skillId)) {
+          throw new Error(`Навык с ID ${skillId} не найден`)
+        }
+
+        if (quality < 0) {
+          throw new Error('Качество не должно быть ниже 0')
+        }
+
+        if (quality > 1) {
+          throw new Error('Качество не должно быть выше 1')
+        }
+
+        // Создаем новое знание
+        const knowledge: LowDbKnowledge = {
+          id: generateId(),
+          createdAt: new Date(),
+          description,
+          data,
+          skillId,
+          quality,
+        }
+
+        // Добавляем знание в массив знаний агента
+        Knowledges.push(knowledge)
+
+        // Сохраняем изменения в БД
+        await lowDb.write()
+
+        return `Знание успешно добавлено. ID: ${knowledge.id}`
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        await createMindLogEntry({
+          ctx,
+          userId: user.id,
+          type: MindLogType.Error,
+          data: `### Ошибка добавления знания
+
+\`\`\`
+${errorMessage}
+\`\`\``,
+          quality: 0.3,
+        })
+
+        return `Ошибка при добавлении знания: ${errorMessage}`
+      }
+    }
 
     case toolName.addSkill: {
       const {

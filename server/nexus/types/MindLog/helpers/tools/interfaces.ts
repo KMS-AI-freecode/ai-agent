@@ -4,11 +4,12 @@ export enum toolName {
   getSystemConfig = 'getSystemConfig',
   execCommand = 'execCommand',
   // Инструменты для работы со знаниями
-  getAllSkills = 'getAllSkills',
+  addKnowledge = 'addKnowledge',
+  getKnowledges = 'getKnowledges',
   addSkill = 'addSkill',
   // updateSkill = 'updateSkill',
   // deleteSkill = 'deleteSkill',
-  // getSkill = 'getSkill',
+  getSkills = 'getSkills',
   // Инструмент для работы с майндлогами
   // getAllMindLogs = 'getAllMindLogs',
   // getMindLog = 'getMindLog',

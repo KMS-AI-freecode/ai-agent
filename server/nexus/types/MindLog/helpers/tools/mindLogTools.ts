@@ -82,29 +82,17 @@ export const mindLogTools: ChatCompletionTool[] = [
       },
     },
   },
-  // Инструменты для работы со знаниями
-  {
-    type: 'function',
-    function: {
-      name: toolName.getAllSkills,
-      description: 'Возвращает список всех знаний',
-      parameters: {
-        type: 'object',
-        properties: {},
-      },
-    },
-  },
   {
     type: 'function',
     function: {
       name: toolName.addSkill,
-      description: 'Добавляет новое знание',
+      description: 'Добавляет новое умение',
       parameters: {
         type: 'object',
         properties: {
           description: {
             type: 'string',
-            description: 'Описание знания',
+            description: 'Описание умения',
           },
           pattern: {
             type: 'string',
@@ -125,6 +113,36 @@ export const mindLogTools: ChatCompletionTool[] = [
           },
         },
         required: ['description', 'pattern', 'functionBody'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: toolName.addKnowledge,
+      description:
+        'Добавляет новое знание. Это может быть справочное знание (например, какая-то дата), или знание какое умение применить, или знание о каких-то пользователях и т.п. В общем, все то, что полезно запомнить',
+      parameters: {
+        type: 'object',
+        properties: {
+          description: {
+            type: 'string',
+            description: 'Описание знания',
+          },
+          data: {
+            type: 'string',
+            data: 'Знание',
+          },
+          skillId: {
+            type: 'string',
+            data: 'Если знание касается какого-то умения, указываем его id',
+          },
+          quality: {
+            type: 'number',
+            description: 'Качество знания от 0.0 до 1.0',
+          },
+        },
+        required: ['description', 'data'],
       },
     },
   },
@@ -174,23 +192,53 @@ export const mindLogTools: ChatCompletionTool[] = [
   //     },
   //   },
   // },
-  // {
-  //   type: 'function',
-  //   function: {
-  //     name: toolName.getSkill,
-  //     description: 'Получает одно знание по индексу',
-  //     parameters: {
-  //       type: 'object',
-  //       properties: {
-  //         index: {
-  //           type: 'integer',
-  //           description: 'Индекс знания в массиве',
-  //         },
-  //       },
-  //       required: ['index'],
-  //     },
-  //   },
-  // },
+  {
+    type: 'function',
+    function: {
+      name: toolName.getKnowledges,
+      description:
+        'Получает знания. Если не указаны идентификаторы, возвращает все доступные знания.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ids: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              'Список идентификаторов знаний для получения. Если не указано, будут возвращены все знания.',
+          },
+          skillId: {
+            type: 'string',
+            description:
+              'Идентификатор умения, для фильтрации знаний по конкретному умению.',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: toolName.getSkills,
+      description:
+        'Получает умения (скиллы). Если не указаны идентификаторы, возвращает все доступные умения.',
+      parameters: {
+        type: 'object',
+        properties: {
+          ids: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              'Список идентификаторов умений для получения. Если не указано, будут возвращены все умения.',
+          },
+        },
+      },
+    },
+  },
   // // Инструмент для работы с майндлогами
   // {
   //   type: 'function',
@@ -300,7 +348,8 @@ export const mindLogTools: ChatCompletionTool[] = [
         properties: {
           userId: {
             type: 'string',
-            description: 'ID пользователя',
+            description:
+              'ID пользователя. Это именно UUID, а не имя или что-то такое',
           },
           messageText: {
             type: 'string',
