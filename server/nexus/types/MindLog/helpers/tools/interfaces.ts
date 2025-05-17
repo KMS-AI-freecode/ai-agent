@@ -16,4 +16,6 @@ export enum toolName {
   // updateMindLog = 'updateMindLog',
   // deleteMindLog = 'deleteMindLog',
   sendMessage = 'sendMessage',
+  // Инструменты для работы с пользователями
+  getUsers = 'getUsers',
 }

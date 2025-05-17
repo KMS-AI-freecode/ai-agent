@@ -62,6 +62,8 @@ export async function sendOpenAiRequest({
     model,
   }
 
+  console.log('sendOpenAiRequest messages', messages)
+
   // Ограничение глубины рекурсии для безопасности
   // const MAX_RECURSION = process.env.PROCESS_SMIMULUS_MAX_RECURSION
   //   ? parseInt(process.env.PROCESS_SMIMULUS_MAX_RECURSION)
@@ -99,7 +101,7 @@ export async function sendOpenAiRequest({
        * Требует
        */
       tool_choice: 'auto',
-      temperature: 0.5,
+      temperature: 0.7,
       parallel_tool_calls: false,
     })
 

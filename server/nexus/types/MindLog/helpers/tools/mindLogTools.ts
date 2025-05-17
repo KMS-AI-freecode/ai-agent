@@ -6,6 +6,32 @@ import { toolName } from './interfaces'
  * Определение инструментов для OpenAI
  */
 export const mindLogTools: ChatCompletionTool[] = [
+  // Инструмент для получения списка пользователей
+  {
+    type: 'function',
+    function: {
+      name: toolName.getUsers,
+      description: 'Получает список пользователей системы',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            description:
+              'Тип пользователя для фильтрации (возможные значения: "User", "Agent")',
+          },
+          ids: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description:
+              'Список идентификаторов пользователей. Если не указано, будут возвращены все пользователи.',
+          },
+        },
+      },
+    },
+  },
   {
     type: 'function',
     function: {
@@ -197,7 +223,7 @@ export const mindLogTools: ChatCompletionTool[] = [
     function: {
       name: toolName.getKnowledges,
       description:
-        'Получает знания. Если не указаны идентификаторы, возвращает все доступные знания.',
+        'Получает Знания (Knowledges). Если не указаны идентификаторы, возвращает все доступные знания. Знания очень полезны и могут дополнительно использоваться для поиска какой-то полезной информации. Если не получается что-то найти с помощью другого инструмента, имеет смысл заглянуть в знания, может там найдется подсказка.',
       parameters: {
         type: 'object',
         properties: {
@@ -223,7 +249,7 @@ export const mindLogTools: ChatCompletionTool[] = [
     function: {
       name: toolName.getSkills,
       description:
-        'Получает умения (скиллы). Если не указаны идентификаторы, возвращает все доступные умения.',
+        'Получает Умения, Скилы (Skills). Если не указаны идентификаторы, возвращает все доступные умения.',
       parameters: {
         type: 'object',
         properties: {

@@ -658,6 +658,56 @@ ${errorMessage}
     //       }
     //     }
 
+    case toolName.getUsers: {
+      const { type, ids } = args as {
+        type?: string
+        ids?: string[]
+      }
+
+      try {
+        // Получаем всех пользователей из БД
+        let filteredUsers = lowDb.data.users
+
+        // Фильтруем по типу, если указан
+        if (type) {
+          filteredUsers = filteredUsers.filter((user) => user.type === type)
+        }
+
+        // Фильтруем по ID, если указаны
+        if (ids?.length) {
+          filteredUsers = filteredUsers.filter((user) => ids.includes(user.id))
+        }
+
+        if (!filteredUsers.length) {
+          return 'Не найдено ни одного пользователя по указанным критериям'
+        }
+
+        // Формируем упрощенный список пользователей без сообщений и других больших коллекций
+        const simplifiedUsers = filteredUsers.map((user) => ({
+          id: user.id,
+          name: user.name ?? '',
+          type: user.type,
+          createdAt: user.createdAt,
+          data: user.data,
+          messagesCount: user.Messages.length,
+          mindLogsCount: user.MindLogs.length,
+          skillsCount: Array.isArray(user.Skills) ? user.Skills.length : 0,
+          knowledgesCount: user.Knowledges.length,
+          experiencesCount: user.Experiences.length,
+        }))
+
+        let result = `Найдено ${filteredUsers.length} пользователей`
+
+        result += '\n\n' + JSON.stringify(simplifiedUsers, null, 2)
+
+        return result
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        return JSON.stringify({ error: errorMessage }, null, 2)
+      }
+    }
+
     case toolName.sendMessage: {
       const {
         userId,
