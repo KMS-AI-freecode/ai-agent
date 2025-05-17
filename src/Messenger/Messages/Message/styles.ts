@@ -27,6 +27,28 @@ interface ChatMessageStyledProps {
   isUser: boolean
 }
 
+export const VideoContainerStyled = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 8px;
+
+  iframe,
+  video {
+    width: 100%;
+    max-width: 100%;
+    border: none;
+    border-radius: 8px;
+    background-color: #000;
+  }
+
+  video {
+    max-height: 315px;
+  }
+`
+
 export const ChatMessageStyled = styled.div<ChatMessageStyledProps>`
   display: flex;
   justify-content: ${(props) => (props.isUser ? 'flex-end' : 'flex-start')};

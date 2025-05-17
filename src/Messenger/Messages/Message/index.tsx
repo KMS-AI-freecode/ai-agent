@@ -1,8 +1,10 @@
 import ReactMarkdown from 'react-markdown'
+import rehypeRaw from 'rehype-raw'
 import {
   ChatMessageContentStyled,
   ChatMessageStyled,
   MessageDateStyled,
+  VideoContainerStyled,
 } from './styles'
 import { ChatMessageFragment } from './interfaces'
 
@@ -31,9 +33,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     <ChatMessageStyled isUser={isUser} {...other}>
       <ChatMessageContentStyled>
         <ReactMarkdown
+          rehypePlugins={[rehypeRaw]}
           components={{
             a: ({ node: _node, href, ...props }) => (
               <>{href ? <a href={href} {...props} /> : <span {...props} />}</>
+            ),
+            iframe: ({ node: _node, ...props }) => (
+              <VideoContainerStyled>
+                <iframe {...props} />
+              </VideoContainerStyled>
+            ),
+            video: ({ node: _node, ...props }) => (
+              <VideoContainerStyled>
+                <video controls {...props} />
+              </VideoContainerStyled>
             ),
           }}
         >

@@ -68,7 +68,7 @@ export const createContext: ContextFunction<
    */
   if (req?.headers.authorization) {
     try {
-      const token = req.headers.authorization
+      const token = req.headers.authorization.replace('Bearer ', '')
       const tokenData = jwt.verify(token, APP_SECRET)
 
       console.log('tokenData', tokenData)
