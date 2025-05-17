@@ -51,6 +51,7 @@ export async function handleToolCall({
   createMessage({
     text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
     fromUser: user,
+    toUser: undefined,
   })
 
   // Логируем вызов инструмента с аргументами

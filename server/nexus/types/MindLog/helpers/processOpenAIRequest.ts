@@ -259,6 +259,7 @@ export async function sendOpenAiRequest({
     createMessage({
       text: content,
       fromUser: toUser,
+      toUser: fromUser,
     })
 
     return content

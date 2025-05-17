@@ -59,6 +59,7 @@ export const sendMessage = async ({
   const message = createMessage({
     fromUser,
     text,
+    toUser,
   })
 
   // Публикуем сообщение для подписок
@@ -83,6 +84,7 @@ export const sendMessage = async ({
       reply = createMessage({
         text: response.result,
         fromUser: toUser,
+        toUser: fromUser,
       })
     }
   } else {
@@ -152,7 +154,6 @@ export const sendMessage = async ({
       // }
 
       const message = createMessage({
-        fromUser: toUser,
         text: `## Пользователь с ID "${fromUser.id}" написал сообщение:
 
 ${text}
@@ -163,6 +164,8 @@ ${text}
 
 В случае чего используй tools. Так же через тулзу ты можешь отправить сообщение ему, или мне, или себе, или другому известному пользователю. Если надо найти какую-то информацию и не получается это сделать, попробуй получить Knowledges через тулзу, там может быть подсказка. Система работает рекурсивно и ты можешь выполнить сразу несколько итераций до формирования конечного ответа.
 `,
+        fromUser: toUser,
+        toUser: aiAgentUser,
       })
 
       // toUser.Messages.push(message)
@@ -198,6 +201,7 @@ ${text}
       reply = createMessage({
         text: responseText,
         fromUser: toUser,
+        toUser: fromUser,
       })
 
       // console.log('sendMessageResolver reply', reply)

@@ -15,7 +15,7 @@ export function getUser(userId: string, lowDb: ApolloContext['lowDb']) {
 type createMessageProps = {
   text: string
   fromUser: LowDbUser
-  toUser?: LowDbUser
+  toUser: LowDbUser | undefined
 }
 
 export function createMessage({
