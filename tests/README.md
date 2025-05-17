@@ -7,6 +7,7 @@
 ## Структура тестов
 
 - `tests/utils/` - вспомогательные утилиты для тестирования
+
   - `testContext.ts` - создание тестового контекста с in-memory LowDB
 
 - `tests/ai-interaction/` - тесты для взаимодействия ИИ-агентов с инструментами
@@ -35,8 +36,8 @@ yarn test:ai:watch
 Тесты используют in-memory версию LowDB для изоляции тестовой среды:
 
 ```typescript
-const adapter = new MemoryAdapter<LowDbData>();
-const db = new Low<LowDbData>(adapter, initialData);
+const adapter = new MemoryAdapter<LowDbData>()
+const db = new Low<LowDbData>(adapter, initialData)
 ```
 
 ### Мокирование OpenAI API
@@ -50,8 +51,8 @@ const openaiMock = {
       create: jest.fn(),
     },
   },
-};
-context.openai = openaiMock as any;
+}
+context.openai = openaiMock as any
 ```
 
 ### Симуляция многошаговых диалогов

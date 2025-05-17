@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-// import { ChatCompletionMessageParam } from 'openai/resources/chat'
 import { ToolCall } from '../interfaces'
 import { createMindLogEntry } from '../createMindLog'
 import { exec } from 'child_process'
@@ -12,7 +11,6 @@ import { Skill } from '../../../../context/skills'
 import { generateId } from '../../../../../utils/id'
 import { createMessage, getUser } from '../../../../../lowdb/helpers'
 import { sendMessage } from '../../../Message/resolvers/helpers/sendMessage'
-// import { getUser } from '../../../../../lowdb/helpers'
 
 /**
  * Обработчик вызовов инструментов
@@ -20,10 +18,8 @@ import { sendMessage } from '../../../Message/resolvers/helpers/sendMessage'
 
 type handleToolCallProps = {
   ctx: ApolloContext
-  // agentId: string
   user: LowDbUser
   toolCall: ToolCall
-  // _messages: ChatCompletionMessageParam[],
 }
 
 export async function handleToolCall({
@@ -38,15 +34,6 @@ export async function handleToolCall({
 
   const { name, arguments: argsString } = toolCall.function
   const args = JSON.parse(argsString)
-
-  // const message: LowDbMessage = {
-  //   id: generateId(),
-  //   text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
-  //   createdAt: new Date(),
-  //   userId: user.id,
-  // }
-
-  // user.Messages.push(message)
 
   createMessage({
     text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
@@ -78,24 +65,6 @@ export async function handleToolCall({
       return `Создана запись с id "${entry.id}"`
     }
 
-    // case toolName.finishProcessing: {
-    //   const { result, quality = 0.9 }: { result: string; quality: number } =
-    //     args
-    //   // Создаем итоговую запись
-    //   await createMindLogEntry(
-    //     ctx,
-    //     agentId,
-    //     MindLogType.Result,
-    //     result,
-    //     quality,
-    //   )
-
-    //   return {
-    //     result,
-    //     finished: true,
-    //   }
-    // }
-
     case toolName.getSystemConfig: {
       // Получаем системную информацию
       const config = {
@@ -120,31 +89,11 @@ export async function handleToolCall({
 ${JSON.stringify(config, null, 2)}
 \`\`\``
 
-      // await createMindLogEntry({
-      //   ctx,
-      //   agentId,
-      //   type: MindLogType.Progress,
-      //   data: result,
-      //   quality: 0.7,
-      // })
-
       return result
     }
 
     case toolName.execCommand: {
       const { command } = args
-
-      // await createMindLogEntry({
-      //   ctx,
-      //   agentId,
-      //   type: MindLogType.Action,
-      //   data: `### Выполнение команды
-
-      // \`\`\`bash
-      // ${command}
-      // \`\`\``,
-      //   quality: 0.7,
-      // })
 
       try {
         // Простой интерфейс - только строка на вход и строка на выход
@@ -157,18 +106,6 @@ ${JSON.stringify(config, null, 2)}
             }
           })
         })
-
-        // await createMindLogEntry({
-        //   ctx,
-        //   agentId,
-        //   type: MindLogType.Progress,
-        //   data: `### Результат выполнения команды
-
-        // \`\`\`
-        // ${output}
-        // \`\`\``,
-        //   quality: 0.8,
-        // })
 
         return output
       } catch (error) {
@@ -390,275 +327,6 @@ ${errorMessage}
         return `Ошибка при добавлении знания: ${errorMessage}`
       }
     }
-
-    //     case toolName.updateSkill: {
-    //       const { index, description, pattern, functionBody } = args
-
-    //       if (index < 0 || index >= skills.length) {
-    //         return {
-    //           result: `Ошибка: Знание с индексом ${index} не найдено`,
-    //         }
-    //       }
-
-    //       try {
-    //         // Обновляем поля знания, если они были предоставлены
-    //         if (description) {
-    //           skills[index].description = description
-    //         }
-
-    //         if (pattern) {
-    //           skills[index].query = new RegExp(pattern)
-    //         }
-
-    //         if (functionBody) {
-    //           // eslint-disable-next-line no-new-func
-    //           skills[index].fn = new Function(functionBody)()
-    //         }
-
-    //         return {
-    //           result: `Знание с индексом ${index} успешно обновлено`,
-    //         }
-    //       } catch (error) {
-    //         const errorMessage =
-    //           error instanceof Error ? error.message : String(error)
-    //         await createMindLogEntry({
-    //           ctx,
-    //           userId: user.id,
-    //           type: MindLogType.Error,
-    //           data: `### Ошибка обновления знания
-
-    // \`\`\`
-    // ${errorMessage}
-    // \`\`\``,
-    //           quality: 0.3,
-    //         })
-
-    //         return {
-    //           result: `Ошибка при обновлении знания: ${errorMessage}`,
-    //         }
-    //       }
-    //     }
-
-    //     case toolName.deleteSkill: {
-    //       const { index } = args
-
-    //       if (index < 0 || index >= skills.length) {
-    //         return {
-    //           result: `Ошибка: Знание с индексом ${index} не найдено`,
-    //         }
-    //       }
-
-    //       // Удаляем знание из массива
-    //       skills.splice(index, 1)
-
-    //       return {
-    //         result: `Знание с индексом ${index} успешно удалено`,
-    //       }
-    //     }
-
-    //     // Инструменты для работы с майндлогами
-    //     case toolName.getAllMindLogs: {
-    //       const { userId, limit = 100, offset = 0 } = args
-
-    //       try {
-    //         // Получаем пользователя
-    //         const targetUser = getUser(userId, ctx)
-
-    //         if (!targetUser) {
-    //           return {
-    //             result: `Пользователь с ID ${userId} не найден`,
-    //           }
-    //         }
-
-    //         // Получаем логи майндлогов пользователя, отсортированные по дате создания (от новых к старым)
-    //         const mindLogs = [...targetUser.MindLogs]
-    //           .sort((a, b) => {
-    //             const dateA = new Date(a.createdAt).getTime()
-    //             const dateB = new Date(b.createdAt).getTime()
-    //             return dateB - dateA
-    //           })
-    //           .slice(offset, offset + limit)
-
-    //         return {
-    //           result: JSON.stringify(mindLogs, null, 2),
-    //         }
-    //       } catch (error) {
-    //         const errorMessage =
-    //           error instanceof Error ? error.message : String(error)
-    //         await createMindLogEntry({
-    //           ctx,
-    //           userId: user.id,
-    //           type: MindLogType.Error,
-    //           data: `### Ошибка получения майндлогов
-
-    // \`\`\`
-    // ${errorMessage}
-    // \`\`\``,
-    //           quality: 0.3,
-    //         })
-
-    //         return {
-    //           result: `Ошибка при получении майндлогов: ${errorMessage}`,
-    //         }
-    //       }
-    //     }
-
-    //     case toolName.getMindLog: {
-    //       const { userId, mindLogId } = args
-
-    //       try {
-    //         // Получаем пользователя
-    //         const targetUser = getUser(userId, ctx)
-
-    //         if (!targetUser) {
-    //           return {
-    //             result: `Пользователь с ID ${userId} не найден`,
-    //           }
-    //         }
-
-    //         // Ищем майндлог по ID
-    //         const mindLog = targetUser.MindLogs.find((log) => log.id === mindLogId)
-
-    //         if (!mindLog) {
-    //           return {
-    //             result: `Майндлог с ID ${mindLogId} не найден`,
-    //           }
-    //         }
-
-    //         return {
-    //           result: JSON.stringify(mindLog, null, 2),
-    //         }
-    //       } catch (error) {
-    //         const errorMessage =
-    //           error instanceof Error ? error.message : String(error)
-    //         await createMindLogEntry({
-    //           ctx,
-    //           userId: user.id,
-    //           type: MindLogType.Error,
-    //           data: `### Ошибка получения майндлога
-
-    // \`\`\`
-    // ${errorMessage}
-    // \`\`\``,
-    //           quality: 0.3,
-    //         })
-
-    //         return {
-    //           result: `Ошибка при получении майндлога: ${errorMessage}`,
-    //         }
-    //       }
-    //     }
-
-    //     case toolName.updateMindLog: {
-    //       const { userId, mindLogId, data: newData, type: newType } = args
-
-    //       try {
-    //         // Получаем пользователя
-    //         const targetUser = getUser(userId, ctx)
-
-    //         if (!targetUser) {
-    //           return {
-    //             result: `Пользователь с ID ${userId} не найден`,
-    //           }
-    //         }
-
-    //         // Ищем индекс майндлога по ID
-    //         const mindLogIndex = targetUser.MindLogs.findIndex(
-    //           (log) => log.id === mindLogId,
-    //         )
-
-    //         if (mindLogIndex === -1) {
-    //           return {
-    //             result: `Майндлог с ID ${mindLogId} не найден`,
-    //           }
-    //         }
-
-    //         // Обновляем данные майндлога
-    //         if (newData) {
-    //           targetUser.MindLogs[mindLogIndex].data = newData
-    //         }
-
-    //         if (newType) {
-    //           targetUser.MindLogs[mindLogIndex].type = newType as MindLogType
-    //         }
-
-    //         // Обновляем дату обновления
-    //         targetUser.MindLogs[mindLogIndex].updatedAt = new Date()
-
-    //         return {
-    //           result: `Майндлог с ID ${mindLogId} успешно обновлен`,
-    //         }
-    //       } catch (error) {
-    //         const errorMessage =
-    //           error instanceof Error ? error.message : String(error)
-    //         await createMindLogEntry({
-    //           ctx,
-    //           userId: user.id,
-    //           type: MindLogType.Error,
-    //           data: `### Ошибка обновления майндлога
-
-    // \`\`\`
-    // ${errorMessage}
-    // \`\`\``,
-    //           quality: 0.3,
-    //         })
-
-    //         return {
-    //           result: `Ошибка при обновлении майндлога: ${errorMessage}`,
-    //         }
-    //       }
-    //     }
-
-    //     case toolName.deleteMindLog: {
-    //       const { userId, mindLogId } = args
-
-    //       try {
-    //         // Получаем пользователя
-    //         const targetUser = getUser(userId, ctx)
-
-    //         if (!targetUser) {
-    //           return {
-    //             result: `Пользователь с ID ${userId} не найден`,
-    //           }
-    //         }
-
-    //         // Ищем индекс майндлога по ID
-    //         const mindLogIndex = targetUser.MindLogs.findIndex(
-    //           (log) => log.id === mindLogId,
-    //         )
-
-    //         if (mindLogIndex === -1) {
-    //           return {
-    //             result: `Майндлог с ID ${mindLogId} не найден`,
-    //           }
-    //         }
-
-    //         // Удаляем майндлог
-    //         targetUser.MindLogs.splice(mindLogIndex, 1)
-
-    //         return {
-    //           result: `Майндлог с ID ${mindLogId} успешно удален`,
-    //         }
-    //       } catch (error) {
-    //         const errorMessage =
-    //           error instanceof Error ? error.message : String(error)
-    //         await createMindLogEntry({
-    //           ctx,
-    //           userId: user.id,
-    //           type: MindLogType.Error,
-    //           data: `### Ошибка удаления майндлога
-
-    // \`\`\`
-    // ${errorMessage}
-    // \`\`\``,
-    //           quality: 0.3,
-    //         })
-
-    //         return {
-    //           result: `Ошибка при удалении майндлога: ${errorMessage}`,
-    //         }
-    //       }
-    //     }
 
     case toolName.getUsers: {
       const { type, ids } = args as {

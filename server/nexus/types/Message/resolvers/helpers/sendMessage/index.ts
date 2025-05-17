@@ -1,12 +1,10 @@
 /* eslint-disable no-console */
-// import { forwardMessageToAi } from '../../../../MindLog/helpers/processStimulus'
 import {
   LowDbAgentData,
   LowDbMessage,
   LowDbUser,
 } from '../../../../../../lowdb/interfaces'
 import { generateId } from '../../../../../../utils/id'
-// import { NexusGenObjects } from '../../../generated/nexus'
 import { PUBSUB_ACTIVITY_ADDED } from '../../../interfaces'
 import { processMessageBySkills } from '../../helpers/processMessageBySkills'
 import { prepareSkillsSerializer } from '../../../../../context/skills'
@@ -38,23 +36,10 @@ export const sendMessage = async ({
 }: sendMessageProps): Promise<LowDbMessage | null> => {
   const { text, fromUser, toUser } = args
 
-  // const { lowDb, Agent, currentUser } = ctx
   const { lowDb, Agent } = ctx
 
   console.log('sendMessage fromUser', fromUser)
   console.log('sendMessage toUser', toUser)
-
-  /**
-   * Сохраняем сообщение в бд
-   */
-  // const message: LowDbMessage = {
-  //   id: generateId(),
-  //   createdAt: new Date(),
-  //   text,
-  //   userId: fromUser.id,
-  // }
-
-  // fromUser.Messages.push(message)
 
   const message = createMessage({
     fromUser,
@@ -74,13 +59,6 @@ export const sendMessage = async ({
     console.log('response', response)
 
     if (response.result) {
-      // reply = {
-      //   id: generateId(),
-      //   createdAt: new Date(),
-      //   text: response.result,
-      //   userId: toUser.id,
-      // }
-
       reply = createMessage({
         text: response.result,
         fromUser: toUser,
@@ -94,16 +72,6 @@ export const sendMessage = async ({
      */
 
     if (toUser === Agent) {
-      // reply = await processStimulus(
-      //   source,
-      //   {
-      //     content: message.text,
-      //     agent: Agent,
-      //   },
-      //   ctx,
-      //   info,
-      // )
-
       const { lowDb, OPENAI_API_BASE_URL } = ctx
 
       const agentData: LowDbAgentData = {
@@ -135,24 +103,6 @@ export const sendMessage = async ({
         lowDb.data.users.push(aiAgentUser)
       }
 
-      // await forwardMessageToAi({
-      //   args: {
-      //     content: message.text,
-      //     agent: toUser,
-      //     // fromUser: currentUser,
-      //     fromUser,
-      //     aiAgentUser,
-      //   },
-      //   ctx,
-      // })
-
-      // const message: LowDbMessage = {
-      //   id: generateId(),
-      //   // userId: agent.userId,
-      //   createdAt: new Date(),
-      //   userId: toUser.id,
-      // }
-
       const message = createMessage({
         text: `## Пользователь с ID "${fromUser.id}" написал сообщение:
 
@@ -168,14 +118,11 @@ ${text}
         toUser: aiAgentUser,
       })
 
-      // toUser.Messages.push(message)
-
       const messages: ChatCompletionMessageParam[] = [
         // { role: 'system', content: systemPrompt },
         { role: 'user', content: message.text, name: toUser.id },
       ]
 
-      // Instead of a direct request to OpenAI, we use our abstraction
       const aiAgentResponse = await sendOpenAiRequest({
         context: ctx,
         fromUser: toUser,
@@ -191,26 +138,13 @@ ${text}
         responseText += `\n\nВот, что он ответил: ${aiAgentResponse}`
       }
 
-      // reply = {
-      //   id: generateId(),
-      //   createdAt: new Date(),
-      //   text: responseText,
-      //   userId: toUser.id,
-      // }
-
       reply = createMessage({
         text: responseText,
         fromUser: toUser,
         toUser: fromUser,
       })
-
-      // console.log('sendMessageResolver reply', reply)
     }
   }
-
-  // if (reply) {
-  //   toUser.Messages.push(reply)
-  // }
 
   await lowDb.write()
 

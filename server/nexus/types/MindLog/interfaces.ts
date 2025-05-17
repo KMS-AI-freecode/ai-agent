@@ -1,8 +1,4 @@
-// import { NexusGenEnums } from '../../generated/nexus'
-
 import { NexusGenObjects } from '../../generated/nexus'
-
-// export type MindLogType = NexusGenEnums['MindLogTypeEnum']
 
 export type MindLog = NexusGenObjects['MindLog']
 
@@ -33,21 +29,3 @@ export enum MindLogType {
   ProcessSummary = 'ProcessSummary',
   SecurityViolation = 'SecurityViolation',
 }
-
-// /**
-//  * Входные данные для создания записи MindLog
-//  */
-// export interface MindLogInput {
-//   type: MindLogType
-//   data: string
-// }
-
-// /**
-//  * Модель записи MindLog
-//  */
-// export type MindLog = {
-//   id: string
-//   type: MindLogType
-//   data: string
-//   createdAt: string
-// }

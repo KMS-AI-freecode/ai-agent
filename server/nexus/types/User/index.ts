@@ -6,7 +6,6 @@ export const User = objectType({
   name: 'User',
   definition(t) {
     t.implements('Activity')
-    // t.nonNull.id('id')
     t.string('name')
     t.nonNull.field('type', {
       type: 'UserTypeEnum',
