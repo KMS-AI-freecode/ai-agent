@@ -1,92 +1,75 @@
 # AI Agent
 
-Легкая и масштабируемая платформа для агентов ИИ с минимальными зависимостями.
+A lightweight and scalable platform for AI agents with minimal dependencies.
 
-## Концепция проекта
+## Purpose
 
-AI Agent — это минималистичная, но мощная платформа для создания и управления децентрализованной сетью ИИ-агентов, спроектированная с акцентом на простоту развертывания и минимальный набор зависимостей.
+AI Agent is a minimalist yet powerful platform for creating and managing a network of AI agents. It emphasizes simplicity, ease of deployment, and extensibility.
 
-### Ключевые принципы
+## Features
 
-1. **Простота и легковесность** — минимум зависимостей для быстрого запуска
-2. **Модульность** — компоненты системы легко заменяемы и расширяемы
-3. **Локальное и облачное исполнение** — возможность работы как с локальными моделями, так и с облачными API
-4. **Унифицированная база знаний** — структурированное хранение опыта агентов
+- **Lightweight architecture** with minimal dependencies for quick deployment
+- **Modular design** with easily replaceable and extensible components
+- **Support for both cloud and local AI models** (OpenAI API and compatible local models)
+- **Structured knowledge storage** for AI agent experiences
+- **Built-in tools system** allowing agents to perform actions
+- **Video embedding support** for rich multimedia communication
 
-## Текущая реализация
+## Technical Stack
 
-### Архитектура системы
+- **Backend**: Node.js + Express
+- **Frontend**: React
+- **API**: GraphQL with Apollo Server (code-first approach)
+- **Data Storage**: LowDB for development and testing
+- **AI Integration**: OpenAI API with support for compatible alternatives
 
-1. **Backend**: Node.js + Express + Next.js
-2. **GraphQL API**: Apollo Server 4 с code-first подходом
-3. **Векторная БД**: LanceDB для хранения записей с векторизацией
-4. **ИИ интеграция**: OpenAI API или локальные модели через совместимые API (LM Studio)
-
-### Компоненты ядра
-
-#### MindLog — база данных "мыслей" агента
-
-- Записи различных типов: Stimulus, Reaction, Reasoning, Action, Progress, Conclusion и др.
-- Векторное представление для поиска семантически схожих записей
-- Хранение в LanceDB с использованием Apache Arrow схемы
-
-#### Apollo Server GraphQL API
-
-- Code-first подход с использованием GraphQL-Tools
-- Полная типизация запросов и ответов
-- Интерфейс GraphiQL для тестирования API
-
-#### Интеграция с OpenAI
-
-- Поддержка OpenAI API и локальных моделей через совместимые интерфейсы
-- Расширяемый клиент для различных провайдеров ИИ
-
-### Функциональность
-
-#### GraphQL API
-
-- Создание записей MindLog (`createMindLog`)
-- Получение всех записей (`mindLogs`)
-- Поиск записей по типу (`mindLogsByType`)
-- Векторный поиск похожих записей (`searchSimilarLogs`)
-- Обработка стимулов (`sendMessage`)
-- Очистка базы данных (`deleteMindLogs`)
-
-#### Обработка стимулов
-
-- Анализ входящих раздражителей
-- Векторный поиск похожих прошлых ситуаций
-- Генерация цепочки рассуждений с использованием ИИ
-- Сохранение процесса мышления в базе данных
-
-## Запуск проекта
-
-### Требования
-
-- Node.js 14+
-- Docker (опционально)
-
-### Локальный запуск
+## Getting Started
 
 ```bash
-# Установка зависимостей
+# Copy and edit envs
+cp .env.sample .env
+
+# Install dependencies
 npm install
 
-# Запуск в режиме разработки
+# Start development server
 npm run dev
 ```
 
-### Запуск в Docker
+## Production
 
 ```bash
-# Сборка контейнера
-docker-compose build
+npm run generate:types
 
-# Запуск
-docker-compose up
+npm run build
+
+npm run start
 ```
 
-## API доступ
+## Testing
+
+```bash
+# Run tests
+npm run test
+```
+
+## API
 
 - **GraphQL API**: http://localhost:3030/api
-- **GraphiQL интерфейс**: http://localhost:3030/graphiql
+- **GraphiQL**: http://localhost:3030/graphiql
+
+## Important Disclaimer
+
+⚠️ **WARNING** ⚠️
+
+This project is still under active development and is **NOT INTENDED FOR PRODUCTION USE**. Please note the following:
+
+- This software was developed with very low security requirements
+- Use at your own risk
+- Recommended to run only locally and preferably in Docker containers
+- Intended for experienced developers only
+- No guarantees of security, stability, or data integrity are provided
+
+## License
+
+MIT
