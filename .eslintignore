@@ -9,6 +9,7 @@
 /packages
 /public
 /shared
+/data
 generated
 tsconfig.tsbuildinfo
 

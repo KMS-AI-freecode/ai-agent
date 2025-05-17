@@ -4,5 +4,6 @@ built
 dist
 venv
 /shared
+/data
 generated
 .env
