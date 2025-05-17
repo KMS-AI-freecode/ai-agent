@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-console */
 import React from 'react'
 import { ChatMessages } from './Messages'

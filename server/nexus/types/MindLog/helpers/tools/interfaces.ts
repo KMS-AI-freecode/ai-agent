@@ -18,4 +18,6 @@ export enum toolName {
   sendMessage = 'sendMessage',
   // Инструменты для работы с пользователями
   getUsers = 'getUsers',
+  // Инструменты для работы с сообщениями
+  getUserMessages = 'getUserMessages',
 }

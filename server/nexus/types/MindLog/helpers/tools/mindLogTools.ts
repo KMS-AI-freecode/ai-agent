@@ -11,24 +11,40 @@ export const mindLogTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: toolName.getUsers,
-      description: 'Получает список пользователей системы',
+      description:
+        'Получает список пользователей. Может быть отфильтрован по типу или по ID.',
       parameters: {
         type: 'object',
         properties: {
           type: {
             type: 'string',
-            description:
-              'Тип пользователя для фильтрации (возможные значения: "User", "Agent")',
+            description: 'Тип пользователя (например, Human, Agent)',
           },
           ids: {
             type: 'array',
+            description: 'Массив ID пользователей для фильтрации',
             items: {
               type: 'string',
             },
-            description:
-              'Список идентификаторов пользователей. Если не указано, будут возвращены все пользователи.',
           },
         },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: toolName.getUserMessages,
+      description: 'Получает сообщения пользователя.',
+      parameters: {
+        type: 'object',
+        properties: {
+          userId: {
+            type: 'string',
+            description: 'ID пользователя, чьи сообщения нужно получить',
+          },
+        },
+        required: ['userId'],
       },
     },
   },

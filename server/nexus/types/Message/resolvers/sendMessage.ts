@@ -11,6 +11,8 @@ export const sendMessageResolver: FieldResolver<
   const { text } = args
   const { lowDb, Agent, currentUser } = ctx
 
+  console.log('sendMessageResolver currentUser', currentUser)
+
   await createMindLogEntry({
     ctx,
     userId: Agent.id,

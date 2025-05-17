@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import {
   ChangeEvent,
   KeyboardEvent,
@@ -147,12 +146,21 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         return ''
       })
     })()
-  }, [addMessageToOutput, createChatMessage])
+  }, [
+    addMessageToOutput,
+    client,
+    createChatMessage,
+    createTokenMutation,
+    currentUser,
+  ])
 
-  const onSubmit = useCallback<React.FormEventHandler>((event) => {
-    event.preventDefault()
-    handleSendMessage()
-  }, [])
+  const onSubmit = useCallback<React.FormEventHandler>(
+    (event) => {
+      event.preventDefault()
+      handleSendMessage()
+    },
+    [handleSendMessage],
+  )
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {

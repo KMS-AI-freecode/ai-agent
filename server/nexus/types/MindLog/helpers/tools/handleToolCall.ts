@@ -349,32 +349,59 @@ ${errorMessage}
         }
 
         if (!filteredUsers.length) {
-          return 'Не найдено ни одного пользователя по указанным критериям'
+          return `Не найдено пользователей по указанным фильтрам`
         }
 
-        // Формируем упрощенный список пользователей без сообщений и других больших коллекций
-        const simplifiedUsers = filteredUsers.map((user) => ({
+        // Формируем сокращенный вариант пользователя для вывода
+        const summarizedUsers = filteredUsers.map((user) => ({
           id: user.id,
-          name: user.name ?? '',
+          name: user.name,
           type: user.type,
           createdAt: user.createdAt,
-          data: user.data,
           messagesCount: user.Messages.length,
           mindLogsCount: user.MindLogs.length,
-          skillsCount: Array.isArray(user.Skills) ? user.Skills.length : 0,
+          skillsCount: user.Skills.length,
           knowledgesCount: user.Knowledges.length,
           experiencesCount: user.Experiences.length,
         }))
 
-        let result = `Найдено ${filteredUsers.length} пользователей`
+        return `Найдено ${summarizedUsers.length} пользователей
 
-        result += '\n\n' + JSON.stringify(simplifiedUsers, null, 2)
-
-        return result
+${JSON.stringify(summarizedUsers, null, 2)}`
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error)
-        return JSON.stringify({ error: errorMessage }, null, 2)
+        return `Ошибка при получении пользователей: ${errorMessage}`
+      }
+    }
+
+    case toolName.getUserMessages: {
+      const { userId } = args as {
+        userId: string
+      }
+
+      try {
+        // Получаем пользователя по ID
+        const targetUser = getUser(userId, ctx.lowDb)
+
+        if (!targetUser) {
+          return `Пользователь с ID ${userId} не найден`
+        }
+
+        // Получаем сообщения пользователя
+        const messages = targetUser.Messages
+
+        if (!messages.length) {
+          return `У пользователя с ID ${userId} нет сообщений`
+        }
+
+        return `Найдено ${messages.length} сообщений пользователя ${targetUser.name} (${targetUser.id})
+
+${JSON.stringify(messages, null, 2)}`
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        return `Ошибка при получении сообщений пользователя: ${errorMessage}`
       }
     }
 
