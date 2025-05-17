@@ -7,14 +7,10 @@ import * as os from 'os'
 import { MindLogType } from '../../interfaces'
 import { toolName } from './interfaces'
 import { ApolloContext } from '../../../../../nexus/context'
-import {
-  LowDbKnowledge,
-  LowDbMessage,
-  LowDbUser,
-} from '../../../../../lowdb/interfaces'
+import { LowDbKnowledge, LowDbUser } from '../../../../../lowdb/interfaces'
 import { Skill } from '../../../../context/skills'
 import { generateId } from '../../../../../utils/id'
-import { getUser } from '../../../../../lowdb/helpers'
+import { createMessage, getUser } from '../../../../../lowdb/helpers'
 import { sendMessage } from '../../../Message/resolvers/helpers/sendMessage'
 // import { getUser } from '../../../../../lowdb/helpers'
 
@@ -43,14 +39,19 @@ export async function handleToolCall({
   const { name, arguments: argsString } = toolCall.function
   const args = JSON.parse(argsString)
 
-  const message: LowDbMessage = {
-    id: generateId(),
-    text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
-    createdAt: new Date(),
-    userId: user.id,
-  }
+  // const message: LowDbMessage = {
+  //   id: generateId(),
+  //   text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
+  //   createdAt: new Date(),
+  //   userId: user.id,
+  // }
 
-  user.Messages.push(message)
+  // user.Messages.push(message)
+
+  createMessage({
+    text: `Вызови тулзу "${name}" с такими аргументами: ${argsString}`,
+    fromUser: user,
+  })
 
   // Логируем вызов инструмента с аргументами
   console.log(`Tool Call: ${name}`, args)

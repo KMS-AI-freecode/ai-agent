@@ -14,6 +14,7 @@ import { ApolloContext } from '../../../../../context'
 import { NexusGenArgTypes } from '../../../../../generated/nexus'
 import { ChatCompletionMessageParam } from 'openai/resources/chat'
 import { sendOpenAiRequest } from '../../../../MindLog/helpers/processOpenAIRequest'
+import { createMessage } from '../../../../../../lowdb/helpers'
 
 type sendMessageProps = {
   ctx: ApolloContext
@@ -22,6 +23,14 @@ type sendMessageProps = {
     toUser: LowDbUser
   }
 }
+
+// TODO Надо доработать эту функцию
+/**
+ * Сейчас проблема в том, что эта функция не универсальная и не позволяет отправлять сообщение
+ * кому угодно. Сейчас она рассчитана только на то, что внешний пользователь отправляет
+ * сообщение агенту, а тот или сам отвечает, или пересылает ИИ агенту. Сам же напрямую он
+ * не может слать ИИ агенту.
+ */
 
 export const sendMessage = async ({
   args,
@@ -32,17 +41,25 @@ export const sendMessage = async ({
   // const { lowDb, Agent, currentUser } = ctx
   const { lowDb, Agent } = ctx
 
+  console.log('sendMessage fromUser', fromUser)
+  console.log('sendMessage toUser', toUser)
+
   /**
    * Сохраняем сообщение в бд
    */
-  const message: LowDbMessage = {
-    id: generateId(),
-    createdAt: new Date(),
-    text,
-    userId: fromUser.id,
-  }
+  // const message: LowDbMessage = {
+  //   id: generateId(),
+  //   createdAt: new Date(),
+  //   text,
+  //   userId: fromUser.id,
+  // }
 
-  fromUser.Messages.push(message)
+  // fromUser.Messages.push(message)
+
+  const message = createMessage({
+    fromUser,
+    text,
+  })
 
   // Публикуем сообщение для подписок
   ctx.pubsub.publish(PUBSUB_ACTIVITY_ADDED, message)
@@ -56,12 +73,17 @@ export const sendMessage = async ({
     console.log('response', response)
 
     if (response.result) {
-      reply = {
-        id: generateId(),
-        createdAt: new Date(),
+      // reply = {
+      //   id: generateId(),
+      //   createdAt: new Date(),
+      //   text: response.result,
+      //   userId: toUser.id,
+      // }
+
+      reply = createMessage({
         text: response.result,
-        userId: toUser.id,
-      }
+        fromUser: toUser,
+      })
     }
   } else {
     /**
@@ -122,8 +144,15 @@ export const sendMessage = async ({
       //   ctx,
       // })
 
-      const message: LowDbMessage = {
-        id: generateId(),
+      // const message: LowDbMessage = {
+      //   id: generateId(),
+      //   // userId: agent.userId,
+      //   createdAt: new Date(),
+      //   userId: toUser.id,
+      // }
+
+      const message = createMessage({
+        fromUser: toUser,
         text: `## Пользователь с ID "${fromUser.id}" написал сообщение:
 
 ${text}
@@ -134,12 +163,9 @@ ${text}
 
 В случае чего используй tools. Так же через тулзу ты можешь отправить сообщение ему, или мне, или себе, или другому известному пользователю. Если надо найти какую-то информацию и не получается это сделать, попробуй получить Knowledges через тулзу, там может быть подсказка. Система работает рекурсивно и ты можешь выполнить сразу несколько итераций до формирования конечного ответа.
 `,
-        // userId: agent.userId,
-        createdAt: new Date(),
-        userId: toUser.id,
-      }
+      })
 
-      toUser.Messages.push(message)
+      // toUser.Messages.push(message)
 
       const messages: ChatCompletionMessageParam[] = [
         // { role: 'system', content: systemPrompt },
@@ -160,38 +186,27 @@ ${text}
 
       if (aiAgentResponse) {
         responseText += `\n\nВот, что он ответил: ${aiAgentResponse}`
-
-        // reply = {
-        //   id: generateId(),
-        //   createdAt: new Date(),
-        //   text: ,
-        //   userId: toUser.id,
-        // }
       }
-      // else {
-      //   reply = {
-      //     id: generateId(),
-      //     createdAt: new Date(),
-      //     text: `Я не смог понять, что ты сказал и переслал твое сообщение ИИ-агенту "${aiAgentUser.id}"`,
-      //     userId: toUser.id,
-      //   }
 
+      // reply = {
+      //   id: generateId(),
+      //   createdAt: new Date(),
+      //   text: responseText,
+      //   userId: toUser.id,
       // }
 
-      reply = {
-        id: generateId(),
-        createdAt: new Date(),
+      reply = createMessage({
         text: responseText,
-        userId: toUser.id,
-      }
+        fromUser: toUser,
+      })
 
       // console.log('sendMessageResolver reply', reply)
     }
   }
 
-  if (reply) {
-    toUser.Messages.push(reply)
-  }
+  // if (reply) {
+  //   toUser.Messages.push(reply)
+  // }
 
   await lowDb.write()
 

@@ -6,7 +6,7 @@ import { processToolCalls } from './tools/processToolCalls'
 import { MindLogType } from '../interfaces'
 import { ApolloContext } from '../../../../nexus/context'
 import { LowDbAgentData, LowDbUser } from '../../../../lowdb/interfaces'
-import { generateId } from '../../../../utils/id'
+import { createMessage } from '../../../../lowdb/helpers'
 
 /**
  * Интерфейс для результата запроса к OpenAI
@@ -248,13 +248,18 @@ export async function sendOpenAiRequest({
     /**
      * Ответ от ИИщки - это ответное сообщение
      */
-    content &&
-      toUser.Messages.push({
-        id: generateId(),
-        createdAt: new Date(),
-        text: content,
-        userId: toUser.id,
-      })
+    // content &&
+    //   toUser.Messages.push({
+    //     id: generateId(),
+    //     createdAt: new Date(),
+    //     text: content,
+    //     userId: toUser.id,
+    //   })
+
+    createMessage({
+      text: content,
+      fromUser: toUser,
+    })
 
     return content
   } catch (error) {
