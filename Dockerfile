@@ -12,7 +12,7 @@ RUN echo "node ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/node && \
     chmod 0440 /etc/sudoers.d/node
 
 WORKDIR /app
-COPY package*.json .
+COPY package*.json ./
 
 RUN ls -la
 
