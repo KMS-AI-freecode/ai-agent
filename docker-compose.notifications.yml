@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  app:
+    security_opt:
+      - apparmor=unconfined
+    privileged: true
+    ipc: host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=${XDG_RUNTIME_DIR}/bus
+      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XDG_RUNTIME_DIR}:${XDG_RUNTIME_DIR}
+      - /run/dbus:/run/dbus:ro
+    user: ${UID:-1000}:${GID:-1000}

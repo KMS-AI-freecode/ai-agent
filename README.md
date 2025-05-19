@@ -46,6 +46,37 @@ npm run build
 npm run start
 ```
 
+## Docker Deployment
+
+This project uses Docker Compose for containerized deployment. There are two compose files available:
+
+### Standard Deployment
+
+The base `docker-compose.yml` file provides standard container configuration:
+
+```bash
+docker compose up
+```
+
+### With System Notifications Support
+
+To enable system notifications (from Docker container to host OS), use both compose files:
+
+```bash
+# Before starting the container with notifications
+xhost +local:docker
+
+# Start with notifications support
+docker compose -f docker-compose.yml -f docker-compose.notifications.yml up
+```
+
+The notifications configuration includes:
+
+- X11 display forwarding
+- D-Bus connectivity
+- AppArmor privilege adjustments
+- IPC host sharing
+
 ## Testing
 
 ```bash
